@@ -9,6 +9,7 @@ import java.util.PriorityQueue;
 public class ElevatorImpl implements Elevator {
 
     private Direction direction = Direction.NONE;
+    private ElevatorState state = ElevatorState.IDLE;
     private int currentFloor;
     private int id;
 
@@ -48,7 +49,7 @@ public class ElevatorImpl implements Elevator {
         // 1. user pressed button from waiting floor
         // 2. user pressed floor button from inside of the elevator
         // TODO: handle the case when user pressed up button but eventually chose to go lower floor
-        Direction towards = decideDirection(toFloor);
+        Direction towards = getDirectionForRequest(toFloor);
 
         if (!isBusy()) {
             this.direction = towards;
@@ -62,56 +63,52 @@ public class ElevatorImpl implements Elevator {
     }
 
     @Override public boolean isBusy() {
-        return Direction.UP.equals(this.direction) || Direction.DOWN.equals(this.direction);
+        return !this.downwardsTargetFloors.isEmpty() || !this.upwardsTargetFloors.isEmpty();
     }
 
     @Override public int currentFloor() {
         return this.currentFloor;
     }
 
-    private Direction decideDirection(int toFloor) {
-        if (this.currentFloor == toFloor) {
+    private Direction getDirectionForRequest(int requestedFloor) {
+        if (this.currentFloor == requestedFloor) {
             return Direction.NONE;
         }
 
-        return toFloor > this.currentFloor ? Direction.UP : Direction.DOWN;
+        return requestedFloor > this.currentFloor ? Direction.UP : Direction.DOWN;
     }
 
-    @Override public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+    private void onPowerOff() {
 
-        ElevatorImpl elevator = (ElevatorImpl) o;
-
-        if (currentFloor != elevator.currentFloor)
-            return false;
-        if (id != elevator.id)
-            return false;
-        if (direction != elevator.direction)
-            return false;
-        if (upwardsTargetFloors != null ? !upwardsTargetFloors.equals(elevator.upwardsTargetFloors) : elevator.upwardsTargetFloors != null)
-            return false;
-        return downwardsTargetFloors != null ? downwardsTargetFloors.equals(elevator.downwardsTargetFloors) : elevator.downwardsTargetFloors == null;
     }
 
-    @Override public int hashCode() {
-        int result = direction != null ? direction.hashCode() : 0;
-        result = 31 * result + currentFloor;
-        result = 31 * result + id;
-        result = 31 * result + (upwardsTargetFloors != null ? upwardsTargetFloors.hashCode() : 0);
-        result = 31 * result + (downwardsTargetFloors != null ? downwardsTargetFloors.hashCode() : 0);
-        return result;
+    private void onEmergency() {
+
     }
 
-    @Override public String toString() {
-        return "ElevatorImpl{" +
-            "direction=" + direction +
-            ", currentFloor=" + currentFloor +
-            ", id=" + id +
-            ", upwardsTargetFloors=" + upwardsTargetFloors +
-            ", downwardsTargetFloors=" + downwardsTargetFloors +
-            '}';
+    private void onMaintenanceRequest() {
+
+    }
+
+    private void onMoveRequest() {
+
+    }
+
+    private void onArrive(int floor) {
+        switch (state) {
+            case MOVING_UP:
+                if (floor == upwardsTargetFloors.peek()) {
+                    this.state = ElevatorState.STOPPED_FOR_GETTING_ON_OR_OFF;
+                }
+                break;
+            case MOVING_DOWN:
+                if (floor == downwardsTargetFloors.peek()) {
+                    this.state = ElevatorState.STOPPED_FOR_GETTING_ON_OR_OFF;
+                }
+                break;
+            default:
+                break;
+        }
+
     }
 }
