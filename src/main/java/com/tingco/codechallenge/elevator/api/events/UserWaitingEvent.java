@@ -5,6 +5,8 @@ import com.tingco.codechallenge.elevator.api.ElevatorImpl;
 import java.util.Objects;
 
 /**
+ * An event that represents a user is waiting and requesting an elevator.
+ * <p>
  * Created by Yong Huang on 2017-11-21.
  */
 public class UserWaitingEvent {
