@@ -5,7 +5,7 @@ package com.tingco.codechallenge.elevator.api.events;
  * <p>
  * Created by Yong Huang on 2017-11-21.
  */
-public class ArriveFloorEvent {
+public class ArriveFloorEvent implements Event {
     int atFloor;
 
     public ArriveFloorEvent(int atFloor) {
@@ -35,5 +35,9 @@ public class ArriveFloorEvent {
         return "ArriveFloorEvent{" +
             "atFloor=" + atFloor +
             '}';
+    }
+
+    @Override public EventName getName() {
+        return EventName.ARRIVE;
     }
 }

@@ -9,7 +9,7 @@ import java.util.Objects;
  * <p>
  * Created by Yong Huang on 2017-11-21.
  */
-public class UserWaitingEvent {
+public class UserWaitingEvent implements Event {
     private int waitingFloor;
     private ElevatorImpl.Direction towards;
 
@@ -52,5 +52,9 @@ public class UserWaitingEvent {
             "waitingFloor=" + waitingFloor +
             ", towards=" + towards +
             '}';
+    }
+
+    @Override public EventName getName() {
+        return EventName.USER_WAITING;
     }
 }

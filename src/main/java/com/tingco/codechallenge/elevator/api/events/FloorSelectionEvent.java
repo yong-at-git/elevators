@@ -5,7 +5,7 @@ package com.tingco.codechallenge.elevator.api.events;
  * <p>
  * Created by Yong Huang on 2017-11-21.
  */
-public class FloorSelectionEvent {
+public class FloorSelectionEvent implements Event {
     private int toFloor;
 
     public FloorSelectionEvent(int toFloor) {
@@ -35,5 +35,9 @@ public class FloorSelectionEvent {
         return "FloorSelectionEvent{" +
             "toFloor=" + toFloor +
             '}';
+    }
+
+    @Override public EventName getName() {
+        return EventName.FLOOR_SELECTION;
     }
 }
