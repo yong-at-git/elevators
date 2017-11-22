@@ -1,12 +1,29 @@
 package com.tingco.codechallenge.elevator.api;
 
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
+import com.tingco.codechallenge.elevator.api.events.EmergencyEvent;
+import com.tingco.codechallenge.elevator.api.events.FloorSelectionEvent;
+import com.tingco.codechallenge.elevator.api.events.PowerOffEvent;
+import com.tingco.codechallenge.elevator.api.events.UserWaitingEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
 /**
  * Created by Yong Huang on 2017-11-20.
  */
+@Component
 public class ElevatorImpl implements Elevator {
+    private static final Logger LOGGER = LogManager.getLogger(ElevatorImpl.class);
+
+    @Autowired
+    EventBus eventBus;
 
     private Direction direction = Direction.NONE;
     private ElevatorState state = ElevatorState.IDLE;
@@ -16,13 +33,23 @@ public class ElevatorImpl implements Elevator {
     private PriorityQueue<Integer> upwardsTargetFloors = new PriorityQueue<>();
     private PriorityQueue<Integer> downwardsTargetFloors = new PriorityQueue<>(Comparator.reverseOrder());
 
+    @PostConstruct
+    public void init() {
+        this.eventBus.register(this);
+    }
+
+    private ElevatorImpl() {
+        // non-arg for Spring
+    }
+
     public ElevatorImpl(int id) {
+        this();
         this.id = id;
     }
 
     public ElevatorImpl(int currentFloor, int id) {
+        this(id);
         this.currentFloor = currentFloor;
-        this.id = id;
     }
 
     @Override public Direction getDirection() {
@@ -78,20 +105,28 @@ public class ElevatorImpl implements Elevator {
         return requestedFloor > this.currentFloor ? Direction.UP : Direction.DOWN;
     }
 
-    private void onPowerOff() {
-
+    @Subscribe
+    public void onPowerOff(PowerOffEvent powerOffEvent) {
+        LOGGER.info("Receiving {} ", powerOffEvent);
     }
 
-    private void onEmergency() {
-
+    @Subscribe
+    public void onEmergency(EmergencyEvent emergencyEvent) {
+        LOGGER.info("Receiving {} ", emergencyEvent);
     }
 
     private void onMaintenanceRequest() {
 
     }
 
-    private void onMoveRequest() {
+    @Subscribe
+    public void onUserWaitingRequest(UserWaitingEvent userWaitingEvent) {
+        LOGGER.info("Receiving {} ", userWaitingEvent);
+    }
 
+    @Subscribe
+    private void onFloorSelectionRequest(FloorSelectionEvent floorSelectionEvent) {
+        LOGGER.info("Receiving {} ", floorSelectionEvent);
     }
 
     private void onArrive(int floor) {
