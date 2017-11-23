@@ -3,6 +3,7 @@ package com.tingco.codechallenge.elevator.api.states;
 import com.tingco.codechallenge.elevator.api.states.impl.DoorClosing;
 import com.tingco.codechallenge.elevator.api.states.impl.DoorOpened;
 import com.tingco.codechallenge.elevator.api.states.impl.DoorOpening;
+import com.tingco.codechallenge.elevator.api.states.impl.Idle;
 import com.tingco.codechallenge.elevator.api.states.impl.JustArrived;
 import com.tingco.codechallenge.elevator.api.states.impl.Maintenance;
 import com.tingco.codechallenge.elevator.api.states.impl.MovingDown;
@@ -17,35 +18,39 @@ public class StateFactory {
         // no arg constructor of factory
     }
 
-    public static DoorClosing createDoorClosing() {
+    public static final DoorClosing createDoorClosing() {
         return new DoorClosing();
     }
 
-    public static DoorOpened createDoorOpened() {
+    public static final DoorOpened createDoorOpened() {
         return new DoorOpened();
     }
 
-    public static DoorOpening createDoorOpening() {
+    public static final DoorOpening createDoorOpening() {
         return new DoorOpening();
     }
 
-    public static JustArrived createJustArrived() {
+    public static final Idle createIdle() {
+        return new Idle();
+    }
+
+    public static final JustArrived createJustArrived() {
         return new JustArrived();
     }
 
-    public static Maintenance createMaintenance() {
+    public static final Maintenance createMaintenance() {
         return new Maintenance();
     }
 
-    public static MovingUp createMovingUp() {
+    public static final MovingUp createMovingUp() {
         return new MovingUp();
     }
 
-    public static MovingDown createMovingDown() {
+    public static final MovingDown createMovingDown() {
         return new MovingDown();
     }
 
-    public static ReadyToMove createReadyToMove() {
+    public static final ReadyToMove createReadyToMove() {
         return new ReadyToMove();
     }
 }

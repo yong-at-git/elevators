@@ -17,10 +17,6 @@ public enum ElevatorStateToken {
      */
     MOVING_DOWN,
     /**
-     * Paused at floor for user to get on or off
-     */
-    STOPPED_FOR_GETTING_ON_OR_OFF,
-    /**
      * Elevator has just arrived at the stopping floor now.
      */
     JUST_ARRIVED,

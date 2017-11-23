@@ -2,6 +2,7 @@ package com.tingco.codechallenge.elevator.api;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.tingco.codechallenge.elevator.api.events.Event;
 import com.tingco.codechallenge.elevator.api.events.impl.ArriveFloor;
 import com.tingco.codechallenge.elevator.api.events.impl.BackToService;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorClosed;
@@ -14,7 +15,8 @@ import com.tingco.codechallenge.elevator.api.events.impl.FloorRequested;
 import com.tingco.codechallenge.elevator.api.events.impl.Maintain;
 import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
 import com.tingco.codechallenge.elevator.api.events.impl.UserWaiting;
-import com.tingco.codechallenge.elevator.api.states.ElevatorStateToken;
+import com.tingco.codechallenge.elevator.api.states.ElevatorState;
+import com.tingco.codechallenge.elevator.api.states.StateFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +37,8 @@ public class ElevatorImpl implements Elevator {
     EventBus eventBus;
 
     private Direction direction = Direction.NONE;
-    private ElevatorStateToken elevatorState = ElevatorStateToken.IDLE;
     private ElevatorFSM fsm = new ElevatorFSM();
+    private ElevatorState elevatorState = StateFactory.createIdle();
     private int currentFloor;
     private int id;
 
@@ -122,42 +124,42 @@ public class ElevatorImpl implements Elevator {
 
     @Subscribe
     public void onBackToService(BackToService backToService) {
-        this.fsm.onBackToService();
+        this.fsm.onBackToService(backToService);
     }
 
     @Subscribe
     public void onDoorClosed(DoorClosed doorClosed) {
-        this.fsm.onDoorClosed();
+        this.fsm.onDoorClosed(doorClosed);
 
     }
 
     @Subscribe
     public void onDoorFailure(DoorFailure doorFailure) {
-        this.fsm.onDoorFailure();
+        this.fsm.onDoorFailure(doorFailure);
 
     }
 
     @Subscribe
     public void onDoorInterrupted(DoorInterrupted doorInterrupted) {
-        this.fsm.onDoorFailure();
+        this.fsm.onDoorInterrupted(doorInterrupted);
     }
 
     @Subscribe
     public void onDoorOpen(DoorOpen doorOpen) {
-        this.fsm.onDoorOpen();
+        this.fsm.onDoorOpen(doorOpen);
 
     }
 
     @Subscribe
     public void onDoorOpened(DoorOpened doorOpened) {
-        this.fsm.onDoorOpened();
+        this.fsm.onDoorOpened(doorOpened);
 
     }
 
     @Subscribe
     public void onEmergency(Emergency emergencyEvent) {
         LOGGER.info("Receiving {} ", emergencyEvent);
-        this.fsm.onEmergency();
+        this.fsm.onEmergency(emergencyEvent);
     }
 
     @Subscribe
@@ -169,13 +171,13 @@ public class ElevatorImpl implements Elevator {
     @Subscribe
     private void onMaintain(Maintain maintain) {
         LOGGER.info("Receiving {}", maintain);
-        this.fsm.onMaintain();
+        this.fsm.onMaintain(maintain);
     }
 
     @Subscribe
     public void onPowerOff(PowerOff powerOff) {
         LOGGER.info("Receiving {} ", powerOff);
-        this.fsm.onPowerOff();
+        this.fsm.onPowerOff(powerOff);
     }
 
     @Subscribe
@@ -185,21 +187,33 @@ public class ElevatorImpl implements Elevator {
     }
 
     private class ElevatorFSM {
-        private final Logger FCM_LOGGER = LogManager.getLogger(ElevatorFSM.class);
+        private final Logger FSM_LOGGER = LogManager.getLogger(ElevatorFSM.class);
 
         public void onArrive(ArriveFloor arriveFloor) {
+            switch (elevatorState.getToken()) {
+                case MOVING_UP:
+                case MOVING_DOWN:
+                    elevatorState = StateFactory.createJustArrived();
+                    break;
+                default:
+                    throwIllegalStateTransitionException(arriveFloor);
+            }
+        }
+
+        public void onBackToService(BackToService backToService) {
+            switch (elevatorState.getToken()) {
+                case MAINTENANCE:
+                    elevatorState = StateFactory.createIdle();
+                    break;
+                default:
+            }
+        }
+
+        public void onDoorClosed(DoorClosed doorClosed) {
 
         }
 
-        public void onBackToService() {
-
-        }
-
-        public void onDoorClosed() {
-
-        }
-
-        public void onDoorFailure() {
+        public void onDoorFailure(DoorFailure doorFailure) {
 
         }
 
@@ -207,16 +221,16 @@ public class ElevatorImpl implements Elevator {
 
         }
 
-        public void onDoorOpen() {
+        public void onDoorOpen(DoorOpen doorOpen) {
 
         }
 
-        public void onDoorOpened() {
+        public void onDoorOpened(DoorOpened doorOpened) {
 
         }
 
         @Subscribe
-        public void onEmergency() {
+        public void onEmergency(Emergency emergency) {
 
         }
 
@@ -226,17 +240,25 @@ public class ElevatorImpl implements Elevator {
         }
 
         @Subscribe
-        private void onMaintain() {
+        private void onMaintain(Maintain maintain) {
         }
 
         @Subscribe
-        public void onPowerOff() {
+        public void onPowerOff(PowerOff powerOff) {
 
         }
 
         @Subscribe
         public void onUserWaitingRequest(UserWaiting userWaiting) {
             LOGGER.info("Receiving {} ", userWaiting);
+        }
+
+        private void throwIllegalStateTransitionException(Event event) {
+            String exceptionMessage = "Event: " + event.getToken() + " should not happen under state: " + elevatorState.getToken();
+
+            FSM_LOGGER.fatal(exceptionMessage);
+
+            throw new IllegalArgumentException(exceptionMessage);
         }
 
     }
