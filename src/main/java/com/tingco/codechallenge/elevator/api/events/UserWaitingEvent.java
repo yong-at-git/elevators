@@ -54,7 +54,7 @@ public class UserWaitingEvent implements Event {
             '}';
     }
 
-    @Override public EventName getName() {
-        return EventName.USER_WAITING;
+    @Override public EventToken getToken() {
+        return EventToken.USER_WAITING;
     }
 }

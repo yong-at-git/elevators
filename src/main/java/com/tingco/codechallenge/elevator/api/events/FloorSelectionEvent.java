@@ -37,7 +37,7 @@ public class FloorSelectionEvent implements Event {
             '}';
     }
 
-    @Override public EventName getName() {
-        return EventName.FLOOR_SELECTION;
+    @Override public EventToken getToken() {
+        return EventToken.FLOOR_SELECTION;
     }
 }

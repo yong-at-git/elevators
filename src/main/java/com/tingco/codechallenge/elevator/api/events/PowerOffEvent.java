@@ -8,7 +8,7 @@ public class PowerOffEvent implements Event {
         return "PowerOffEvent";
     }
 
-    @Override public EventName getName() {
-        return EventName.POWER_OFF;
+    @Override public EventToken getToken() {
+        return EventToken.POWER_OFF;
     }
 }

@@ -9,7 +9,7 @@ public class EmergencyEvent implements Event {
         return "EmergencyEvent";
     }
 
-    @Override public EventName getName() {
-        return EventName.EMERGENCY;
+    @Override public EventToken getToken() {
+        return EventToken.EMERGENCY;
     }
 }

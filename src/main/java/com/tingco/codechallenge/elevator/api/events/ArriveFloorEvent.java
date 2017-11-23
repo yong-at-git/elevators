@@ -37,7 +37,7 @@ public class ArriveFloorEvent implements Event {
             '}';
     }
 
-    @Override public EventName getName() {
-        return EventName.ARRIVE;
+    @Override public EventToken getToken() {
+        return EventToken.ARRIVE;
     }
 }
