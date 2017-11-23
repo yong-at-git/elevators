@@ -2,6 +2,13 @@ package com.tingco.codechallenge.elevator.api;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.tingco.codechallenge.elevator.api.events.impl.ArriveFloor;
+import com.tingco.codechallenge.elevator.api.events.impl.BackToService;
+import com.tingco.codechallenge.elevator.api.events.impl.DoorClosed;
+import com.tingco.codechallenge.elevator.api.events.impl.DoorFailure;
+import com.tingco.codechallenge.elevator.api.events.impl.DoorInterrupted;
+import com.tingco.codechallenge.elevator.api.events.impl.DoorOpen;
+import com.tingco.codechallenge.elevator.api.events.impl.DoorOpened;
 import com.tingco.codechallenge.elevator.api.events.impl.Emergency;
 import com.tingco.codechallenge.elevator.api.events.impl.FloorRequested;
 import com.tingco.codechallenge.elevator.api.events.impl.Maintain;
@@ -107,9 +114,32 @@ public class ElevatorImpl implements Elevator {
         return requestedFloor > this.currentFloor ? Direction.UP : Direction.DOWN;
     }
 
-    @Subscribe
-    public void onPowerOff(PowerOff powerOff) {
-        LOGGER.info("Receiving {} ", powerOff);
+    public void onArrive(ArriveFloor arriveFloor) {
+
+    }
+
+    public void onBackToService(BackToService backToService) {
+
+    }
+
+    public void onDoorClosed(DoorClosed doorClosed) {
+
+    }
+
+    public void onDoorFailure(DoorFailure doorFailure) {
+
+    }
+
+    public void onDoorInterrupted(DoorInterrupted doorInterrupted) {
+
+    }
+
+    public void onDoorOpen(DoorOpen doorOpen) {
+
+    }
+
+    public void onDoorOpened(DoorOpened doorOpened) {
+
     }
 
     @Subscribe
@@ -118,8 +148,18 @@ public class ElevatorImpl implements Elevator {
     }
 
     @Subscribe
-    private void onMaintenanceRequest(Maintain maintainEvent) {
-        LOGGER.info("Receiving {}", maintainEvent);
+    private void onFloorRequested(FloorRequested floorRequested) {
+        LOGGER.info("Receiving {} ", floorRequested);
+    }
+
+    @Subscribe
+    private void onMaintain(Maintain maintain) {
+        LOGGER.info("Receiving {}", maintain);
+    }
+
+    @Subscribe
+    public void onPowerOff(PowerOff powerOff) {
+        LOGGER.info("Receiving {} ", powerOff);
     }
 
     @Subscribe
@@ -127,26 +167,4 @@ public class ElevatorImpl implements Elevator {
         LOGGER.info("Receiving {} ", userWaiting);
     }
 
-    @Subscribe
-    private void onFloorSelectionRequest(FloorRequested floorRequested) {
-        LOGGER.info("Receiving {} ", floorRequested);
-    }
-
-    private void onArrive(int floor) {
-        switch (state) {
-            case MOVING_UP:
-                if (floor == upwardsTargetFloors.peek()) {
-                    this.state = ElevatorStateToken.STOPPED_FOR_GETTING_ON_OR_OFF;
-                }
-                break;
-            case MOVING_DOWN:
-                if (floor == downwardsTargetFloors.peek()) {
-                    this.state = ElevatorStateToken.STOPPED_FOR_GETTING_ON_OR_OFF;
-                }
-                break;
-            default:
-                break;
-        }
-
-    }
 }
