@@ -206,6 +206,7 @@ public class ElevatorImpl implements Elevator {
                     elevatorState = StateFactory.createIdle();
                     break;
                 default:
+                    throwIllegalStateTransitionException(backToService);
             }
         }
 
@@ -214,43 +215,100 @@ public class ElevatorImpl implements Elevator {
         }
 
         public void onDoorFailure(DoorFailure doorFailure) {
-
         }
 
         public void onDoorInterrupted(DoorInterrupted doorInterrupted) {
-
         }
 
         public void onDoorOpen(DoorOpen doorOpen) {
-
+            switch (elevatorState.getToken()) {
+                case JUST_ARRIVED:
+                    toDoorOpening();
+                    break;
+                default:
+                    throwIllegalStateTransitionException(doorOpen);
+            }
         }
 
         public void onDoorOpened(DoorOpened doorOpened) {
-
+            switch (elevatorState.getToken()) {
+                case DOOR_OPENING:
+                    toDoorOpened();
+                    break;
+            }
         }
 
-        @Subscribe
         public void onEmergency(Emergency emergency) {
-
+            toMaintenance();
         }
 
-        @Subscribe
         private void onFloorRequested(FloorRequested floorRequested) {
-            LOGGER.info("Receiving {} ", floorRequested);
+            switch (elevatorState.getToken()) {
+                case MOVING_DOWN:
+                case MOVING_UP:
+                case IDLE:
+                case JUST_ARRIVED:
+                case DOOR_OPENED:
+                case DOOR_OPENING:
+                case DOOR_CLOSING:
+                case READY_TO_MOVE:
+                    // TODO add to queue
+                    break;
+            }
         }
 
-        @Subscribe
         private void onMaintain(Maintain maintain) {
+            switch (elevatorState.getToken()) {
+                case IDLE:
+                    toMaintenance();
+                    break;
+            }
         }
 
-        @Subscribe
         public void onPowerOff(PowerOff powerOff) {
-
+            toMaintenance();
         }
 
         @Subscribe
         public void onUserWaitingRequest(UserWaiting userWaiting) {
-            LOGGER.info("Receiving {} ", userWaiting);
+
+        }
+
+        void toIdle() {
+            elevatorState = StateFactory.createIdle();
+        }
+
+        void toMovingUp() {
+            elevatorState = StateFactory.createMovingUp();
+        }
+
+        void toMovingDown() {
+            elevatorState = StateFactory.createMovingDown();
+        }
+
+        void toMaintenance() {
+            elevatorState = StateFactory.createMaintenance();
+        }
+
+        void toJustArrived() {
+            elevatorState = StateFactory.createJustArrived();
+        }
+
+        void toDoorOpening() {
+            // TODO: openDoor()
+            elevatorState = StateFactory.createDoorOpening();
+        }
+
+        void toDoorOpened() {
+            elevatorState = StateFactory.createDoorOpened();
+        }
+
+        void toDoorClosing() {
+            elevatorState = StateFactory.createDoorClosing();
+        }
+
+        void toReadyToMove() {
+            elevatorState = StateFactory.createReadyToMove();
         }
 
         private void throwIllegalStateTransitionException(Event event) {
