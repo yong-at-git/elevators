@@ -21,6 +21,26 @@ public enum ElevatorStateToken {
      */
     STOPPED_FOR_GETTING_ON_OR_OFF,
     /**
+     * Elevator has just arrived at the stopping floor now.
+     */
+    JUST_ARRIVED,
+    /**
+     * The door is opening.
+     */
+    DOOR_OPENING,
+    /**
+     * The door is completely opened and stand still.
+     */
+    DOOR_OPENED,
+    /**
+     * The door is closing.
+     */
+    DOOR_CLOSING,
+    /**
+     * The door is completely closed and elevator is ready to move up or down.
+     */
+    READY_TO_MOVE,
+    /**
      * Not moving, without pending request and ready for service;
      */
     MAINTENANCE
