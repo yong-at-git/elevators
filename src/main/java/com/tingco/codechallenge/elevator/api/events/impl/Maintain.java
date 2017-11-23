@@ -6,7 +6,7 @@ import com.tingco.codechallenge.elevator.api.events.EventToken;
 /**
  * Created by Yong Huang on 2017-11-22.
  */
-public class Maintenance implements Event {
+public class Maintain implements Event {
     @Override public EventToken getToken() {
         return EventToken.MAINTENANCE;
     }

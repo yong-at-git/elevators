@@ -4,7 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.tingco.codechallenge.elevator.api.events.impl.Emergency;
 import com.tingco.codechallenge.elevator.api.events.impl.FloorSelection;
-import com.tingco.codechallenge.elevator.api.events.impl.Maintenance;
+import com.tingco.codechallenge.elevator.api.events.impl.Maintain;
 import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
 import com.tingco.codechallenge.elevator.api.events.impl.UserWaiting;
 import com.tingco.codechallenge.elevator.api.states.ElevatorStateToken;
@@ -118,8 +118,8 @@ public class ElevatorImpl implements Elevator {
     }
 
     @Subscribe
-    private void onMaintenanceRequest(Maintenance maintenanceEvent) {
-        LOGGER.info("Receiving {}", maintenanceEvent);
+    private void onMaintenanceRequest(Maintain maintainEvent) {
+        LOGGER.info("Receiving {}", maintainEvent);
     }
 
     @Subscribe
