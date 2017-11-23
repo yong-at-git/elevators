@@ -6,9 +6,9 @@ import com.tingco.codechallenge.elevator.api.events.EventToken;
 /**
  * Created by Yong Huang on 2017-11-21.
  */
-public class PowerOffEvent implements Event {
+public class PowerOff implements Event {
     @Override public String toString() {
-        return "PowerOffEvent";
+        return "PowerOff";
     }
 
     @Override public EventToken getToken() {

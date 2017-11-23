@@ -2,11 +2,11 @@ package com.tingco.codechallenge.elevator.api;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import com.tingco.codechallenge.elevator.api.events.impl.EmergencyEvent;
-import com.tingco.codechallenge.elevator.api.events.impl.FloorSelectionEvent;
-import com.tingco.codechallenge.elevator.api.events.impl.MaintenanceEvent;
-import com.tingco.codechallenge.elevator.api.events.impl.PowerOffEvent;
-import com.tingco.codechallenge.elevator.api.events.impl.UserWaitingEvent;
+import com.tingco.codechallenge.elevator.api.events.impl.Emergency;
+import com.tingco.codechallenge.elevator.api.events.impl.FloorSelection;
+import com.tingco.codechallenge.elevator.api.events.impl.Maintenance;
+import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
+import com.tingco.codechallenge.elevator.api.events.impl.UserWaiting;
 import com.tingco.codechallenge.elevator.api.states.ElevatorStateToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -108,28 +108,28 @@ public class ElevatorImpl implements Elevator {
     }
 
     @Subscribe
-    public void onPowerOff(PowerOffEvent powerOffEvent) {
-        LOGGER.info("Receiving {} ", powerOffEvent);
+    public void onPowerOff(PowerOff powerOff) {
+        LOGGER.info("Receiving {} ", powerOff);
     }
 
     @Subscribe
-    public void onEmergency(EmergencyEvent emergencyEvent) {
+    public void onEmergency(Emergency emergencyEvent) {
         LOGGER.info("Receiving {} ", emergencyEvent);
     }
 
     @Subscribe
-    private void onMaintenanceRequest(MaintenanceEvent maintenanceEvent) {
+    private void onMaintenanceRequest(Maintenance maintenanceEvent) {
         LOGGER.info("Receiving {}", maintenanceEvent);
     }
 
     @Subscribe
-    public void onUserWaitingRequest(UserWaitingEvent userWaitingEvent) {
-        LOGGER.info("Receiving {} ", userWaitingEvent);
+    public void onUserWaitingRequest(UserWaiting userWaiting) {
+        LOGGER.info("Receiving {} ", userWaiting);
     }
 
     @Subscribe
-    private void onFloorSelectionRequest(FloorSelectionEvent floorSelectionEvent) {
-        LOGGER.info("Receiving {} ", floorSelectionEvent);
+    private void onFloorSelectionRequest(FloorSelection floorSelection) {
+        LOGGER.info("Receiving {} ", floorSelection);
     }
 
     private void onArrive(int floor) {

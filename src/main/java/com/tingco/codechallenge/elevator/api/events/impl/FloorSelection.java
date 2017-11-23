@@ -4,19 +4,19 @@ import com.tingco.codechallenge.elevator.api.events.Event;
 import com.tingco.codechallenge.elevator.api.events.EventToken;
 
 /**
- * An event that represents the elevator has just arrived a floor.
+ * An event that represents a ride request towards a target floor.
  * <p>
  * Created by Yong Huang on 2017-11-21.
  */
-public class ArriveFloorEvent implements Event {
-    int atFloor;
+public class FloorSelection implements Event {
+    private int toFloor;
 
-    public ArriveFloorEvent(int atFloor) {
-        this.atFloor = atFloor;
+    public FloorSelection(int toFloor) {
+        this.toFloor = toFloor;
     }
 
-    public int getAtFloor() {
-        return atFloor;
+    public int getToFloor() {
+        return toFloor;
     }
 
     @Override public boolean equals(Object o) {
@@ -25,22 +25,22 @@ public class ArriveFloorEvent implements Event {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        ArriveFloorEvent that = (ArriveFloorEvent) o;
+        FloorSelection that = (FloorSelection) o;
 
-        return atFloor == that.atFloor;
+        return toFloor == that.toFloor;
     }
 
     @Override public int hashCode() {
-        return atFloor;
+        return toFloor;
     }
 
     @Override public String toString() {
-        return "ArriveFloorEvent{" +
-            "atFloor=" + atFloor +
+        return "FloorSelection{" +
+            "toFloor=" + toFloor +
             '}';
     }
 
     @Override public EventToken getToken() {
-        return EventToken.ARRIVE;
+        return EventToken.FLOOR_SELECTION;
     }
 }

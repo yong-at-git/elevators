@@ -11,11 +11,11 @@ import java.util.Objects;
  * <p>
  * Created by Yong Huang on 2017-11-21.
  */
-public class UserWaitingEvent implements Event {
+public class UserWaiting implements Event {
     private int waitingFloor;
     private ElevatorImpl.Direction towards;
 
-    public UserWaitingEvent(int waitingFloor, ElevatorImpl.Direction towards) {
+    public UserWaiting(int waitingFloor, ElevatorImpl.Direction towards) {
         Objects.requireNonNull(towards);
 
         this.waitingFloor = waitingFloor;
@@ -36,7 +36,7 @@ public class UserWaitingEvent implements Event {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        UserWaitingEvent that = (UserWaitingEvent) o;
+        UserWaiting that = (UserWaiting) o;
 
         if (waitingFloor != that.waitingFloor)
             return false;
@@ -50,7 +50,7 @@ public class UserWaitingEvent implements Event {
     }
 
     @Override public String toString() {
-        return "UserWaitingEvent{" +
+        return "UserWaiting{" +
             "waitingFloor=" + waitingFloor +
             ", towards=" + towards +
             '}';

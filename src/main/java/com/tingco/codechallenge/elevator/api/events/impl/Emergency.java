@@ -6,10 +6,10 @@ import com.tingco.codechallenge.elevator.api.events.EventToken;
 /**
  * Created by Yong Huang on 2017-11-21.
  */
-public class EmergencyEvent implements Event {
+public class Emergency implements Event {
 
     @Override public String toString() {
-        return "EmergencyEvent";
+        return "Emergency";
     }
 
     @Override public EventToken getToken() {
