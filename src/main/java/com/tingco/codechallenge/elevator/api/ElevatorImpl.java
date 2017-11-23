@@ -7,6 +7,7 @@ import com.tingco.codechallenge.elevator.api.events.FloorSelectionEvent;
 import com.tingco.codechallenge.elevator.api.events.MaintenanceEvent;
 import com.tingco.codechallenge.elevator.api.events.PowerOffEvent;
 import com.tingco.codechallenge.elevator.api.events.UserWaitingEvent;
+import com.tingco.codechallenge.elevator.api.states.ElevatorStateToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,7 @@ public class ElevatorImpl implements Elevator {
     EventBus eventBus;
 
     private Direction direction = Direction.NONE;
-    private ElevatorState state = ElevatorState.IDLE;
+    private ElevatorStateToken state = ElevatorStateToken.IDLE;
     private int currentFloor;
     private int id;
 
@@ -135,12 +136,12 @@ public class ElevatorImpl implements Elevator {
         switch (state) {
             case MOVING_UP:
                 if (floor == upwardsTargetFloors.peek()) {
-                    this.state = ElevatorState.STOPPED_FOR_GETTING_ON_OR_OFF;
+                    this.state = ElevatorStateToken.STOPPED_FOR_GETTING_ON_OR_OFF;
                 }
                 break;
             case MOVING_DOWN:
                 if (floor == downwardsTargetFloors.peek()) {
-                    this.state = ElevatorState.STOPPED_FOR_GETTING_ON_OR_OFF;
+                    this.state = ElevatorStateToken.STOPPED_FOR_GETTING_ON_OR_OFF;
                 }
                 break;
             default:

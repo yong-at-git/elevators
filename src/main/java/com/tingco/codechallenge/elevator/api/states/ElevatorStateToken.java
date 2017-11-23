@@ -1,9 +1,9 @@
-package com.tingco.codechallenge.elevator.api;
+package com.tingco.codechallenge.elevator.api.states;
 
 /**
  * Created by Yong Huang on 2017-11-21.
  */
-public enum ElevatorState {
+public enum ElevatorStateToken {
     /**
      * Not moving, without pending request and ready for service.
      */
