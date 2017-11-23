@@ -1,6 +1,8 @@
-package com.tingco.codechallenge.elevator.api.events;
+package com.tingco.codechallenge.elevator.api.events.impl;
 
 import com.tingco.codechallenge.elevator.api.ElevatorImpl;
+import com.tingco.codechallenge.elevator.api.events.Event;
+import com.tingco.codechallenge.elevator.api.events.EventToken;
 
 import java.util.Objects;
 

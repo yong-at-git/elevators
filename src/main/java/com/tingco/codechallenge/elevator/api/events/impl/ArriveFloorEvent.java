@@ -1,4 +1,7 @@
-package com.tingco.codechallenge.elevator.api.events;
+package com.tingco.codechallenge.elevator.api.events.impl;
+
+import com.tingco.codechallenge.elevator.api.events.Event;
+import com.tingco.codechallenge.elevator.api.events.EventToken;
 
 /**
  * An event that represents the elevator has just arrived a floor.

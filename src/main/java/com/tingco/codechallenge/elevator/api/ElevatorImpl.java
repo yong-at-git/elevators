@@ -2,11 +2,11 @@ package com.tingco.codechallenge.elevator.api;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import com.tingco.codechallenge.elevator.api.events.EmergencyEvent;
-import com.tingco.codechallenge.elevator.api.events.FloorSelectionEvent;
-import com.tingco.codechallenge.elevator.api.events.MaintenanceEvent;
-import com.tingco.codechallenge.elevator.api.events.PowerOffEvent;
-import com.tingco.codechallenge.elevator.api.events.UserWaitingEvent;
+import com.tingco.codechallenge.elevator.api.events.impl.EmergencyEvent;
+import com.tingco.codechallenge.elevator.api.events.impl.FloorSelectionEvent;
+import com.tingco.codechallenge.elevator.api.events.impl.MaintenanceEvent;
+import com.tingco.codechallenge.elevator.api.events.impl.PowerOffEvent;
+import com.tingco.codechallenge.elevator.api.events.impl.UserWaitingEvent;
 import com.tingco.codechallenge.elevator.api.states.ElevatorStateToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
