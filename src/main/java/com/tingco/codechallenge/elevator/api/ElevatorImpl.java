@@ -35,7 +35,8 @@ public class ElevatorImpl implements Elevator {
     EventBus eventBus;
 
     private Direction direction = Direction.NONE;
-    private ElevatorStateToken state = ElevatorStateToken.IDLE;
+    private ElevatorStateToken elevatorState = ElevatorStateToken.IDLE;
+    private ElevatorFSM fsm = new ElevatorFSM();
     private int currentFloor;
     private int id;
 
@@ -114,57 +115,129 @@ public class ElevatorImpl implements Elevator {
         return requestedFloor > this.currentFloor ? Direction.UP : Direction.DOWN;
     }
 
+    @Subscribe
     public void onArrive(ArriveFloor arriveFloor) {
-
+        this.fsm.onArrive(arriveFloor);
     }
 
+    @Subscribe
     public void onBackToService(BackToService backToService) {
-
+        this.fsm.onBackToService();
     }
 
+    @Subscribe
     public void onDoorClosed(DoorClosed doorClosed) {
+        this.fsm.onDoorClosed();
 
     }
 
+    @Subscribe
     public void onDoorFailure(DoorFailure doorFailure) {
+        this.fsm.onDoorFailure();
 
     }
 
+    @Subscribe
     public void onDoorInterrupted(DoorInterrupted doorInterrupted) {
-
+        this.fsm.onDoorFailure();
     }
 
+    @Subscribe
     public void onDoorOpen(DoorOpen doorOpen) {
+        this.fsm.onDoorOpen();
 
     }
 
+    @Subscribe
     public void onDoorOpened(DoorOpened doorOpened) {
+        this.fsm.onDoorOpened();
 
     }
 
     @Subscribe
     public void onEmergency(Emergency emergencyEvent) {
         LOGGER.info("Receiving {} ", emergencyEvent);
+        this.fsm.onEmergency();
     }
 
     @Subscribe
     private void onFloorRequested(FloorRequested floorRequested) {
         LOGGER.info("Receiving {} ", floorRequested);
+        this.fsm.onFloorRequested(floorRequested);
     }
 
     @Subscribe
     private void onMaintain(Maintain maintain) {
         LOGGER.info("Receiving {}", maintain);
+        this.fsm.onMaintain();
     }
 
     @Subscribe
     public void onPowerOff(PowerOff powerOff) {
         LOGGER.info("Receiving {} ", powerOff);
+        this.fsm.onPowerOff();
     }
 
     @Subscribe
     public void onUserWaitingRequest(UserWaiting userWaiting) {
         LOGGER.info("Receiving {} ", userWaiting);
+        this.fsm.onUserWaitingRequest(userWaiting);
     }
 
+    private class ElevatorFSM {
+        private final Logger FCM_LOGGER = LogManager.getLogger(ElevatorFSM.class);
+
+        public void onArrive(ArriveFloor arriveFloor) {
+
+        }
+
+        public void onBackToService() {
+
+        }
+
+        public void onDoorClosed() {
+
+        }
+
+        public void onDoorFailure() {
+
+        }
+
+        public void onDoorInterrupted(DoorInterrupted doorInterrupted) {
+
+        }
+
+        public void onDoorOpen() {
+
+        }
+
+        public void onDoorOpened() {
+
+        }
+
+        @Subscribe
+        public void onEmergency() {
+
+        }
+
+        @Subscribe
+        private void onFloorRequested(FloorRequested floorRequested) {
+            LOGGER.info("Receiving {} ", floorRequested);
+        }
+
+        @Subscribe
+        private void onMaintain() {
+        }
+
+        @Subscribe
+        public void onPowerOff() {
+
+        }
+
+        @Subscribe
+        public void onUserWaitingRequest(UserWaiting userWaiting) {
+            LOGGER.info("Receiving {} ", userWaiting);
+        }
+
+    }
 }
