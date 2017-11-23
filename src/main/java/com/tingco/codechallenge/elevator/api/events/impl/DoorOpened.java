@@ -4,10 +4,10 @@ import com.tingco.codechallenge.elevator.api.events.Event;
 import com.tingco.codechallenge.elevator.api.events.EventToken;
 
 /**
- * Created by Yong Huang on 2017-11-22.
+ * Created by Yong Huang on 2017-11-23.
  */
-public class Maintain implements Event {
+public class DoorOpened implements Event {
     @Override public EventToken getToken() {
-        return EventToken.MAINTAIN;
+        return EventToken.DOOR_OPENED;
     }
 }

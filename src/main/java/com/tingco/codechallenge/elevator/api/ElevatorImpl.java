@@ -3,7 +3,7 @@ package com.tingco.codechallenge.elevator.api;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.tingco.codechallenge.elevator.api.events.impl.Emergency;
-import com.tingco.codechallenge.elevator.api.events.impl.FloorSelection;
+import com.tingco.codechallenge.elevator.api.events.impl.FloorRequested;
 import com.tingco.codechallenge.elevator.api.events.impl.Maintain;
 import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
 import com.tingco.codechallenge.elevator.api.events.impl.UserWaiting;
@@ -128,8 +128,8 @@ public class ElevatorImpl implements Elevator {
     }
 
     @Subscribe
-    private void onFloorSelectionRequest(FloorSelection floorSelection) {
-        LOGGER.info("Receiving {} ", floorSelection);
+    private void onFloorSelectionRequest(FloorRequested floorRequested) {
+        LOGGER.info("Receiving {} ", floorRequested);
     }
 
     private void onArrive(int floor) {

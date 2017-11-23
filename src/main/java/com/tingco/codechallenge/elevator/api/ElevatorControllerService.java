@@ -2,7 +2,7 @@ package com.tingco.codechallenge.elevator.api;
 
 import com.google.common.eventbus.EventBus;
 import com.tingco.codechallenge.elevator.api.events.impl.Emergency;
-import com.tingco.codechallenge.elevator.api.events.impl.FloorSelection;
+import com.tingco.codechallenge.elevator.api.events.impl.FloorRequested;
 import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
 import com.tingco.codechallenge.elevator.api.events.impl.UserWaiting;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +43,7 @@ public class ElevatorControllerService implements ElevatorController {
         this.eventBus.post(new PowerOff());
         this.eventBus.post(new Emergency());
         this.eventBus.post(new UserWaiting(2, Elevator.Direction.UP));
-        this.eventBus.post(new FloorSelection(3));
+        this.eventBus.post(new FloorRequested(3));
     }
 
     public int requestElevatorId(int toFloor) {

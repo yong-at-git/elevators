@@ -8,10 +8,10 @@ import com.tingco.codechallenge.elevator.api.events.EventToken;
  * <p>
  * Created by Yong Huang on 2017-11-21.
  */
-public class FloorSelection implements Event {
+public class FloorRequested implements Event {
     private int toFloor;
 
-    public FloorSelection(int toFloor) {
+    public FloorRequested(int toFloor) {
         this.toFloor = toFloor;
     }
 
@@ -25,7 +25,7 @@ public class FloorSelection implements Event {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        FloorSelection that = (FloorSelection) o;
+        FloorRequested that = (FloorRequested) o;
 
         return toFloor == that.toFloor;
     }
@@ -35,12 +35,12 @@ public class FloorSelection implements Event {
     }
 
     @Override public String toString() {
-        return "FloorSelection{" +
+        return "FloorRequested{" +
             "toFloor=" + toFloor +
             '}';
     }
 
     @Override public EventToken getToken() {
-        return EventToken.FLOOR_SELECTION;
+        return EventToken.FLOOR_REQUESTED;
     }
 }
