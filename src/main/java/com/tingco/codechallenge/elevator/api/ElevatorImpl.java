@@ -38,7 +38,7 @@ public class ElevatorImpl implements Elevator {
 
     private Direction direction = Direction.NONE;
     private ElevatorFSM fsm = new ElevatorFSM();
-    private ElevatorState elevatorState = StateFactory.createIdle();
+    private ElevatorState currentState = StateFactory.createIdle();
     private int currentFloor;
     private int id;
 
@@ -141,7 +141,7 @@ public class ElevatorImpl implements Elevator {
 
     @Subscribe
     public void onDoorInterrupted(DoorInterrupted doorInterrupted) {
-        this.fsm.onDoorInterrupted(doorInterrupted);
+
     }
 
     @Subscribe
@@ -159,7 +159,7 @@ public class ElevatorImpl implements Elevator {
     @Subscribe
     public void onEmergency(Emergency emergencyEvent) {
         LOGGER.info("Receiving {} ", emergencyEvent);
-        this.fsm.onEmergency(emergencyEvent);
+        this.fsm.onEmergency();
     }
 
     @Subscribe
@@ -191,7 +191,7 @@ public class ElevatorImpl implements Elevator {
 
         // These onEvent methods capture event, check condition(i.e. FSM guard), then perform optional actions(e.g. state change)
         public void onArrive(ArriveFloor arriveFloor) {
-            switch (elevatorState.getToken()) {
+            switch (currentState.getToken()) {
                 case MOVING_UP:
                 case MOVING_DOWN:
                     updateStatusOnArrive(arriveFloor.getAtFloor());
@@ -202,9 +202,9 @@ public class ElevatorImpl implements Elevator {
         }
 
         public void onBackToService(BackToService backToService) {
-            switch (elevatorState.getToken()) {
+            switch (currentState.getToken()) {
                 case MAINTENANCE:
-                    elevatorState = StateFactory.createIdle();
+                    updateStatusOnBackToService();
                     break;
                 default:
                     throwIllegalStateTransitionException(backToService);
@@ -212,19 +212,34 @@ public class ElevatorImpl implements Elevator {
         }
 
         public void onDoorClosed(DoorClosed doorClosed) {
-
+            switch (currentState.getToken()) {
+                case DOOR_OPENING:
+                    updateStatusOnDoorClosed();
+                    break;
+                default:
+                    throwIllegalStateTransitionException(doorClosed);
+            }
         }
 
         public void onDoorFailure(DoorFailure doorFailure) {
-        }
-
-        public void onDoorInterrupted(DoorInterrupted doorInterrupted) {
+            switch (currentState.getToken()) {
+                case JUST_ARRIVED:
+                case DOOR_OPENING:
+                case DOOR_OPENED:
+                case DOOR_CLOSING:
+                    updateStatusOnDoorFailure();
+                    break;
+                default:
+                    throwIllegalStateTransitionException(doorFailure);
+            }
         }
 
         public void onDoorOpen(DoorOpen doorOpen) {
-            switch (elevatorState.getToken()) {
+            switch (currentState.getToken()) {
                 case JUST_ARRIVED:
-                    toDoorOpening();
+                case DOOR_OPENING:
+                case DOOR_CLOSING:
+                    updateStatusOnDoorOpen();
                     break;
                 default:
                     throwIllegalStateTransitionException(doorOpen);
@@ -232,96 +247,161 @@ public class ElevatorImpl implements Elevator {
         }
 
         public void onDoorOpened(DoorOpened doorOpened) {
-            switch (elevatorState.getToken()) {
+            switch (currentState.getToken()) {
                 case DOOR_OPENING:
-                    toDoorOpened();
+                    updateStatusOnDoorOpened();
                     break;
+                default:
+                    throwIllegalStateTransitionException(doorOpened);
             }
         }
 
-        public void onEmergency(Emergency emergency) {
-            toMaintenance();
+        public void onEmergency() {
+            updateStatusOnEmergency();
         }
 
         private void onFloorRequested(FloorRequested floorRequested) {
-            switch (elevatorState.getToken()) {
-                case MOVING_DOWN:
-                case MOVING_UP:
+            int toFloor = floorRequested.getToFloor();
+
+            switch (currentState.getToken()) {
                 case IDLE:
+                    if (toFloor > currentFloor) {
+                        upwardsTargetFloors.offer(toFloor);
+                        toMovingUp();
+                    } else if (toFloor < currentFloor) {
+                        downwardsTargetFloors.offer(toFloor);
+                        toMovingDown();
+                    } else {
+                        FSM_LOGGER.info("Currently at the requested floor: " + toFloor);
+                    }
+                    break;
+                case MOVING_UP:
+                    if (isFloorAlreadyRequested(toFloor)) {
+                        FSM_LOGGER.info("Floor {} is already requested.", toFloor);
+                    } else {
+                        if (toFloor > currentFloor) {
+                            upwardsTargetFloors.offer(toFloor);
+                        } else if (toFloor <= currentFloor) {
+                            downwardsTargetFloors.offer(toFloor);
+                        }
+                    }
+                    break;
+                case MOVING_DOWN:
+                    if (isFloorAlreadyRequested(toFloor)) {
+                        FSM_LOGGER.info("Floor {} is already requested.", toFloor);
+                    } else {
+                        if (toFloor >= currentFloor) {
+                            upwardsTargetFloors.offer(toFloor);
+                        } else if (toFloor < currentFloor) {
+                            downwardsTargetFloors.offer(toFloor);
+                        }
+                    }
+                    break;
                 case JUST_ARRIVED:
-                case DOOR_OPENED:
                 case DOOR_OPENING:
+                case DOOR_OPENED:
                 case DOOR_CLOSING:
                 case READY_TO_MOVE:
-                    // TODO add to queue
+                    if (isFloorAlreadyRequested(toFloor)) {
+                        FSM_LOGGER.info("Floor {} is already requested.", toFloor);
+                    } else {
+                        if (toFloor > currentFloor) {
+                            upwardsTargetFloors.offer(toFloor);
+                        } else if (toFloor < currentFloor) {
+                            downwardsTargetFloors.offer(toFloor);
+                        } else {
+                            FSM_LOGGER.info("Currently at the requested floor: " + toFloor);
+                        }
+                    }
                     break;
+                default:
+                    throwIllegalStateTransitionException(floorRequested);
             }
         }
 
         private void onMaintain(Maintain maintain) {
-            switch (elevatorState.getToken()) {
+            switch (currentState.getToken()) {
                 case IDLE:
-                    toMaintenance();
+                    updateStatusOnMaintain();
                     break;
             }
         }
 
         public void onPowerOff(PowerOff powerOff) {
-            toMaintenance();
+            updateStatusOnMaintain();
         }
 
-        @Subscribe
         public void onUserWaitingRequest(UserWaiting userWaiting) {
 
         }
 
-        void toIdle() {
-            elevatorState = StateFactory.createIdle();
+        void updateStatusOnBackToService() {
+            currentState = StateFactory.createIdle();
+        }
+
+        void updateStatusOnEmergency() {
+            currentState = StateFactory.createMaintenance();
         }
 
         void toMovingUp() {
-            elevatorState = StateFactory.createMovingUp();
+            direction = Direction.UP;
+            currentState = StateFactory.createMovingUp();
+            // doMovingUp()
+            // stopMotor()
         }
 
         void toMovingDown() {
-            elevatorState = StateFactory.createMovingDown();
+            direction = Direction.DOWN;
+            currentState = StateFactory.createMovingDown();
+            // doMovingDown()
+            // stopMotor()
         }
 
-        void toMaintenance() {
-            elevatorState = StateFactory.createMaintenance();
+        void updateStatusOnMaintain() {
+            currentState = StateFactory.createMaintenance();
         }
 
         void updateStatusOnArrive(int arrivedFloor) {
 
             currentFloor = arrivedFloor;
 
-            boolean floorIsRequested = upwardsTargetFloors.contains(arrivedFloor) || downwardsTargetFloors.contains(arrivedFloor);
-            if (floorIsRequested) {
-                elevatorState = StateFactory.createJustArrived();
+            if (isFloorAlreadyRequested(arrivedFloor)) {
+                currentState = StateFactory.createJustArrived();
             }
 
             // otherwise just bypass
         }
 
-        void toDoorOpening() {
-            // TODO: openDoor()
-            elevatorState = StateFactory.createDoorOpening();
+        private boolean isFloorAlreadyRequested(int arrivedFloor) {
+            return upwardsTargetFloors.contains(arrivedFloor) || downwardsTargetFloors.contains(arrivedFloor);
         }
 
-        void toDoorOpened() {
-            elevatorState = StateFactory.createDoorOpened();
+        void updateStatusOnDoorOpen() {
+            currentState = StateFactory.createDoorOpening();
+        }
+
+        void updateStatusOnDoorFailure() {
+            currentState = StateFactory.createMaintenance();
+        }
+
+        void updateStatusOnDoorOpened() {
+            currentState = StateFactory.createDoorOpened();
+        }
+
+        void updateStatusOnDoorClosed() {
+            currentState = StateFactory.createReadyToMove();
         }
 
         void toDoorClosing() {
-            elevatorState = StateFactory.createDoorClosing();
+            currentState = StateFactory.createDoorClosing();
         }
 
         void toReadyToMove() {
-            elevatorState = StateFactory.createReadyToMove();
+            currentState = StateFactory.createReadyToMove();
         }
 
         private void throwIllegalStateTransitionException(Event event) {
-            String exceptionMessage = "Event: " + event.getToken() + " should not happen under state: " + elevatorState.getToken();
+            String exceptionMessage = "Event: " + event.getToken() + " should not happen under state: " + currentState.getToken();
 
             FSM_LOGGER.fatal(exceptionMessage);
 
