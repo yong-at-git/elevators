@@ -189,11 +189,12 @@ public class ElevatorImpl implements Elevator {
     private class ElevatorFSM {
         private final Logger FSM_LOGGER = LogManager.getLogger(ElevatorFSM.class);
 
+        // These onEvent methods capture event, check condition(i.e. FSM guard), then perform optional actions(e.g. state change)
         public void onArrive(ArriveFloor arriveFloor) {
             switch (elevatorState.getToken()) {
                 case MOVING_UP:
                 case MOVING_DOWN:
-                    elevatorState = StateFactory.createJustArrived();
+                    updateStatusOnArrive(arriveFloor.getAtFloor());
                     break;
                 default:
                     throwIllegalStateTransitionException(arriveFloor);
@@ -290,8 +291,16 @@ public class ElevatorImpl implements Elevator {
             elevatorState = StateFactory.createMaintenance();
         }
 
-        void toJustArrived() {
-            elevatorState = StateFactory.createJustArrived();
+        void updateStatusOnArrive(int arrivedFloor) {
+
+            currentFloor = arrivedFloor;
+
+            boolean floorIsRequested = upwardsTargetFloors.contains(arrivedFloor) || downwardsTargetFloors.contains(arrivedFloor);
+            if (floorIsRequested) {
+                elevatorState = StateFactory.createJustArrived();
+            }
+
+            // otherwise just bypass
         }
 
         void toDoorOpening() {
