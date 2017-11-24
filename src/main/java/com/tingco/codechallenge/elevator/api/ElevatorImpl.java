@@ -38,7 +38,7 @@ public class ElevatorImpl implements Elevator {
     private Direction direction = Direction.NONE;
     private ElevatorFSM fsm = new ElevatorFSM(this);
     private ElevatorState currentState = StateFactory.createIdle();
-    private int currentFloor;
+    private int currentFloor = 0;
     private int id;
 
     private PriorityQueue<Integer> upwardsTargetFloors = new PriorityQueue<>();
@@ -108,11 +108,20 @@ public class ElevatorImpl implements Elevator {
         return this.currentFloor;
     }
 
+    public boolean isOnUpPath() {
+        return Direction.UP.equals(this.direction);
+    }
+
+    public boolean isOnDownPath() {
+        return Direction.DOWN.equals(this.direction);
+    }
+
     ElevatorState getCurrentState() {
         return currentState;
     }
 
     void setCurrentState(ElevatorState newState) {
+        LOGGER.info("Setting state from: {} to: {}", this.getCurrentState().getToken(), newState.getToken());
         this.currentState = newState;
     }
 
@@ -120,8 +129,10 @@ public class ElevatorImpl implements Elevator {
         this.direction = direction;
     }
 
-    public void setCurrentFloor(int currentFloor) {
-        this.currentFloor = currentFloor;
+    void setCurrentFloor(int newFloor) {
+        LOGGER.info("Setting floor from: {} to {}", this.currentFloor, newFloor);
+
+        this.currentFloor = newFloor;
     }
 
     private Direction getDirectionForRequest(int requestedFloor) {
@@ -151,7 +162,6 @@ public class ElevatorImpl implements Elevator {
     @Subscribe
     public void onDoorFailure(DoorFailure doorFailure) {
         this.fsm.onDoorFailure(doorFailure);
-
     }
 
     @Subscribe

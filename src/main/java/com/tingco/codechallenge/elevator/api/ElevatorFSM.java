@@ -13,7 +13,6 @@ import com.tingco.codechallenge.elevator.api.events.impl.FloorRequested;
 import com.tingco.codechallenge.elevator.api.events.impl.Maintain;
 import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
 import com.tingco.codechallenge.elevator.api.events.impl.UserWaiting;
-import com.tingco.codechallenge.elevator.api.states.ElevatorState;
 import com.tingco.codechallenge.elevator.api.states.StateFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,14 +21,17 @@ import org.apache.logging.log4j.Logger;
  * Created by Yong Huang on 2017-11-24.
  */
 class ElevatorFSM {
-    private ElevatorImpl elevator;
-    private final Logger FSM_LOGGER = LogManager.getLogger(ElevatorFSM.class);
+    private final ElevatorImpl elevator;
+    private static final Logger LOGGER = LogManager.getLogger(ElevatorFSM.class);
 
     ElevatorFSM(ElevatorImpl elevator) {
         this.elevator = elevator;
     }
 
-    // These onEvent methods capture event, check condition(i.e. FSM guard), then perform optional actions(e.g. state change)
+    /*
+     * These onEvent methods capture event, check condition(i.e. FSM guard),
+     * then delegate status update tasks to the update methods.
+     */
     void onArrive(ArriveFloor arriveFloor) {
         switch (elevator.getCurrentState().getToken()) {
             case MOVING_UP:
@@ -51,9 +53,7 @@ class ElevatorFSM {
         }
     }
 
-    ElevatorState onDoorClosed(DoorClosed doorClosed) {
-        ElevatorState returnState = this.elevator.getCurrentState();
-
+    void onDoorClosed(DoorClosed doorClosed) {
         switch (elevator.getCurrentState().getToken()) {
             case DOOR_OPENING:
                 updateStatusOnDoorClosed();
@@ -61,8 +61,6 @@ class ElevatorFSM {
             default:
                 throwIllegalStateTransitionException(doorClosed);
         }
-
-        return returnState;
     }
 
     void onDoorFailure(DoorFailure doorFailure) {
@@ -105,8 +103,20 @@ class ElevatorFSM {
     }
 
     void onFloorRequested(FloorRequested floorRequested) {
-        Elevator.Direction towards = handleFloorRequestQueue(floorRequested);
-        movingUp(towards);
+        switch (elevator.getCurrentState().getToken()) {
+            case IDLE:
+            case MOVING_UP:
+            case MOVING_DOWN:
+            case JUST_ARRIVED:
+            case DOOR_OPENING:
+            case DOOR_OPENED:
+            case DOOR_CLOSING:
+            case READY_TO_MOVE:
+                updateStatusOnFloorRequested(floorRequested);
+                break;
+            default:
+                throwIllegalStateTransitionException(floorRequested);
+        }
     }
 
     void onMaintain(Maintain maintain) {
@@ -119,16 +129,38 @@ class ElevatorFSM {
         }
     }
 
-    public void onPowerOff(PowerOff powerOff) {
+    void onPowerOff(PowerOff powerOff) {
         updateStatusOnPowerOff();
     }
 
-    public void onUserWaitingRequest(UserWaiting userWaiting) {
-        handleFloorRequestQueue(userWaiting);
-        movingUp(userWaiting.getTowards());
+    void onUserWaitingRequest(UserWaiting userWaiting) {
+        switch (elevator.getCurrentState().getToken()) {
+            case IDLE:
+            case MOVING_UP:
+            case MOVING_DOWN:
+            case JUST_ARRIVED:
+            case DOOR_OPENING:
+            case DOOR_OPENED:
+            case DOOR_CLOSING:
+            case READY_TO_MOVE:
+                updateStatusOnUserWaitingRequest(userWaiting);
+                break;
+            default:
+                throwIllegalStateTransitionException(userWaiting);
+        }
     }
 
-    Elevator.Direction handleFloorRequestQueue(FloorMovementRequest floorRequested) {
+    private void updateStatusOnFloorRequested(FloorRequested floorRequested) {
+        Elevator.Direction towards = handleFloorRequestQueue(floorRequested);
+        moving(towards);
+    }
+
+    private void updateStatusOnUserWaitingRequest(UserWaiting userWaiting) {
+        handleFloorRequestQueue(userWaiting);
+        moving(userWaiting.getTowards());
+    }
+
+    private Elevator.Direction handleFloorRequestQueue(FloorMovementRequest floorRequested) {
         int toFloor = floorRequested.getToFloor();
         Elevator.Direction towards = Elevator.Direction.NONE;
 
@@ -141,12 +173,12 @@ class ElevatorFSM {
                     elevator.getDownwardsTargetFloors().offer(toFloor);
                     towards = Elevator.Direction.DOWN;
                 } else {
-                    FSM_LOGGER.info("Currently at the requested floor: " + toFloor);
+                    LOGGER.info("Currently at the requested floor: " + toFloor);
                 }
                 break;
             case MOVING_UP:
                 if (isFloorAlreadyRequested(toFloor)) {
-                    FSM_LOGGER.info("Floor {} is already requested.", toFloor);
+                    LOGGER.info("Floor {} is already requested.", toFloor);
                 } else {
                     if (toFloor > elevator.currentFloor()) {
                         elevator.getUpwardsTargetFloors().offer(toFloor);
@@ -159,7 +191,7 @@ class ElevatorFSM {
                 break;
             case MOVING_DOWN:
                 if (isFloorAlreadyRequested(toFloor)) {
-                    FSM_LOGGER.info("Floor {} is already requested.", toFloor);
+                    LOGGER.info("Floor {} is already requested.", toFloor);
                 } else {
                     if (toFloor >= elevator.currentFloor()) {
                         elevator.getUpwardsTargetFloors().offer(toFloor);
@@ -176,7 +208,7 @@ class ElevatorFSM {
             case DOOR_CLOSING:
             case READY_TO_MOVE:
                 if (isFloorAlreadyRequested(toFloor)) {
-                    FSM_LOGGER.info("Floor {} is already requested.", toFloor);
+                    LOGGER.info("Floor {} is already requested.", toFloor);
                 } else {
                     if (toFloor > elevator.currentFloor()) {
                         elevator.getUpwardsTargetFloors().offer(toFloor);
@@ -185,7 +217,7 @@ class ElevatorFSM {
                         elevator.getDownwardsTargetFloors().offer(toFloor);
                         towards = Elevator.Direction.DOWN;
                     } else {
-                        FSM_LOGGER.info("Currently at the requested floor: " + toFloor);
+                        LOGGER.info("Currently at the requested floor: " + toFloor);
                     }
                 }
                 break;
@@ -196,19 +228,19 @@ class ElevatorFSM {
         return towards;
     }
 
-    void updateStatusOnBackToService() {
+    private void updateStatusOnBackToService() {
         this.elevator.setCurrentState(StateFactory.createIdle());
     }
 
-    void updateStatusOnEmergency() {
+    private void updateStatusOnEmergency() {
         this.elevator.setCurrentState(StateFactory.createMaintenance());
     }
 
-    void updateStatusOnPowerOff() {
+    private void updateStatusOnPowerOff() {
         this.elevator.setCurrentState(StateFactory.createMaintenance());
     }
 
-    void moving(Elevator.Direction requestedDirection) {
+    private void moving(Elevator.Direction requestedDirection) {
         switch (requestedDirection) {
             case UP:
                 movingUp(requestedDirection);
@@ -221,7 +253,9 @@ class ElevatorFSM {
         }
     }
 
-    void movingUp(Elevator.Direction requestDirection) {
+    private void movingUp(Elevator.Direction requestDirection) {
+        LOGGER.info("Moving down upon requested direction: {}", requestDirection);
+
         this.elevator.setDirection(requestDirection);
         this.elevator.setCurrentState(StateFactory.createMovingUp());
         doMovingUp();
@@ -229,43 +263,45 @@ class ElevatorFSM {
     }
 
     private void doMovingUp() {
-        FSM_LOGGER.info("Moving up.");
+        LOGGER.info("Moving up.");
         try {
             Thread.sleep(2 * 1000);
         } catch (InterruptedException e) {
             stopMotor();
-            FSM_LOGGER.info("Emergency happened.");
+            LOGGER.info("Emergency happened.");
             elevator.eventBus.post(EventFactory.createEmergency());
         }
     }
 
     private void stopMotor() {
-        FSM_LOGGER.info("Stopping motor.");
+        LOGGER.info("Stopping motor.");
     }
 
-    void movingDown(Elevator.Direction requestDirection) {
-        this.elevator.setDirection(Elevator.Direction.DOWN);
+    private void movingDown(Elevator.Direction requestDirection) {
+        LOGGER.info("Moving down upon requested direction: {}", requestDirection);
+
+        this.elevator.setDirection(requestDirection);
         this.elevator.setCurrentState(StateFactory.createMovingDown());
         doMovingDown();
         stopMotor();
     }
 
     private void doMovingDown() {
-        FSM_LOGGER.info("Moving down");
+        LOGGER.info("Moving down");
         try {
             Thread.sleep(2 * 1000);
         } catch (InterruptedException e) {
             stopMotor();
-            FSM_LOGGER.info("Emergency happened.");
+            LOGGER.info("Emergency happened.");
             elevator.eventBus.post(EventFactory.createEmergency());
         }
     }
 
-    void updateStatusOnMaintain() {
+    private void updateStatusOnMaintain() {
         this.elevator.setCurrentState(StateFactory.createMaintenance());
     }
 
-    void updateStatusOnArrive(int arrivedFloor) {
+    private void updateStatusOnArrive(int arrivedFloor) {
         this.elevator.setCurrentFloor(arrivedFloor);
 
         if (isFloorAlreadyRequested(arrivedFloor)) {
@@ -279,28 +315,49 @@ class ElevatorFSM {
             || this.elevator.getDownwardsTargetFloors().contains(arrivedFloor);
     }
 
-    void updateStatusOnDoorOpen() {
+    private void updateStatusOnDoorOpen() {
         this.elevator.setCurrentState(StateFactory.createDoorOpening());
     }
 
-    void updateStatusOnDoorFailure() {
+    private void updateStatusOnDoorFailure() {
         this.elevator.setCurrentState(StateFactory.createMaintenance());
     }
 
-    void updateStatusOnDoorOpened() {
+    private void updateStatusOnDoorOpened() {
         this.elevator.setCurrentState(StateFactory.createDoorOpened());
     }
 
-    void updateStatusOnDoorClosed() {
+    private void updateStatusOnDoorClosed() {
         this.elevator.setCurrentState(StateFactory.createReadyToMove());
+
+        if (this.elevator.getDownwardsTargetFloors().isEmpty() && this.elevator.getUpwardsTargetFloors().isEmpty()) {
+            // none request left, going idle
+            this.elevator.setCurrentState(StateFactory.createIdle());
+            this.elevator.setDirection(Elevator.Direction.NONE);
+        } else if (this.elevator.getDownwardsTargetFloors().isEmpty()) {
+            // only upwards request, going up
+            this.elevator.setCurrentState(StateFactory.createMovingUp());
+            this.elevator.setDirection(Elevator.Direction.UP);
+        } else if (this.elevator.getUpwardsTargetFloors().isEmpty()) {
+            // only downwards request, going down
+            this.elevator.setCurrentState(StateFactory.createMovingDown());
+            this.elevator.setDirection(Elevator.Direction.DOWN);
+        } else {
+            // still have both upwards and downwards requests
+            if (this.elevator.isOnUpPath()) {
+                // keep moving up
+                this.elevator.setCurrentState(StateFactory.createMovingUp());
+            } else {
+                // keep moving down
+                this.elevator.setCurrentState(StateFactory.createMovingDown());
+            }
+        }
     }
 
     private void throwIllegalStateTransitionException(Event event) {
         String exceptionMessage = "Event: " + event.getToken() + " should not happen under state: " + elevator.getCurrentState().getToken();
 
-        FSM_LOGGER.fatal(exceptionMessage);
-
+        LOGGER.fatal(exceptionMessage);
         throw new IllegalArgumentException(exceptionMessage);
     }
-
 }
