@@ -1,7 +1,6 @@
 package com.tingco.codechallenge.elevator.api.events.impl;
 
 import com.tingco.codechallenge.elevator.api.ElevatorImpl;
-import com.tingco.codechallenge.elevator.api.events.Event;
 import com.tingco.codechallenge.elevator.api.events.EventToken;
 
 import java.util.Objects;
@@ -11,7 +10,7 @@ import java.util.Objects;
  * <p>
  * Created by Yong Huang on 2017-11-21.
  */
-public class UserWaiting implements Event {
+public class UserWaiting extends FloorMovementRequest {
     private int waitingFloor;
     private ElevatorImpl.Direction towards;
 
@@ -58,5 +57,9 @@ public class UserWaiting implements Event {
 
     @Override public EventToken getToken() {
         return EventToken.USER_WAITING;
+    }
+
+    @Override public int getToFloor() {
+        return waitingFloor;
     }
 }

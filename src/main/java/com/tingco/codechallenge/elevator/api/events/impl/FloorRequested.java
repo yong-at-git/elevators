@@ -1,6 +1,5 @@
 package com.tingco.codechallenge.elevator.api.events.impl;
 
-import com.tingco.codechallenge.elevator.api.events.Event;
 import com.tingco.codechallenge.elevator.api.events.EventToken;
 
 /**
@@ -8,13 +7,14 @@ import com.tingco.codechallenge.elevator.api.events.EventToken;
  * <p>
  * Created by Yong Huang on 2017-11-21.
  */
-public class FloorRequested implements Event {
+public class FloorRequested extends FloorMovementRequest {
     private int toFloor;
 
     public FloorRequested(int toFloor) {
         this.toFloor = toFloor;
     }
 
+    @Override
     public int getToFloor() {
         return toFloor;
     }

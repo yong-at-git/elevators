@@ -2,7 +2,6 @@ package com.tingco.codechallenge.elevator.api;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import com.tingco.codechallenge.elevator.api.events.Event;
 import com.tingco.codechallenge.elevator.api.events.impl.ArriveFloor;
 import com.tingco.codechallenge.elevator.api.events.impl.BackToService;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorClosed;
@@ -37,7 +36,7 @@ public class ElevatorImpl implements Elevator {
     EventBus eventBus;
 
     private Direction direction = Direction.NONE;
-    private ElevatorFSM fsm = new ElevatorFSM();
+    private ElevatorFSM fsm = new ElevatorFSM(this);
     private ElevatorState currentState = StateFactory.createIdle();
     private int currentFloor;
     private int id;
@@ -107,6 +106,22 @@ public class ElevatorImpl implements Elevator {
 
     @Override public int currentFloor() {
         return this.currentFloor;
+    }
+
+    ElevatorState getCurrentState() {
+        return currentState;
+    }
+
+    void setCurrentState(ElevatorState newState) {
+        this.currentState = newState;
+    }
+
+    void setDirection(Direction direction) {
+        this.direction = direction;
+    }
+
+    public void setCurrentFloor(int currentFloor) {
+        this.currentFloor = currentFloor;
     }
 
     private Direction getDirectionForRequest(int requestedFloor) {
@@ -186,227 +201,15 @@ public class ElevatorImpl implements Elevator {
         this.fsm.onUserWaitingRequest(userWaiting);
     }
 
-    private class ElevatorFSM {
-        private final Logger FSM_LOGGER = LogManager.getLogger(ElevatorFSM.class);
+    EventBus getEventBus() {
+        return eventBus;
+    }
 
-        // These onEvent methods capture event, check condition(i.e. FSM guard), then perform optional actions(e.g. state change)
-        public void onArrive(ArriveFloor arriveFloor) {
-            switch (currentState.getToken()) {
-                case MOVING_UP:
-                case MOVING_DOWN:
-                    updateStatusOnArrive(arriveFloor.getAtFloor());
-                    break;
-                default:
-                    throwIllegalStateTransitionException(arriveFloor);
-            }
-        }
+    PriorityQueue<Integer> getUpwardsTargetFloors() {
+        return upwardsTargetFloors;
+    }
 
-        public void onBackToService(BackToService backToService) {
-            switch (currentState.getToken()) {
-                case MAINTENANCE:
-                    updateStatusOnBackToService();
-                    break;
-                default:
-                    throwIllegalStateTransitionException(backToService);
-            }
-        }
-
-        public void onDoorClosed(DoorClosed doorClosed) {
-            switch (currentState.getToken()) {
-                case DOOR_OPENING:
-                    updateStatusOnDoorClosed();
-                    break;
-                default:
-                    throwIllegalStateTransitionException(doorClosed);
-            }
-        }
-
-        public void onDoorFailure(DoorFailure doorFailure) {
-            switch (currentState.getToken()) {
-                case JUST_ARRIVED:
-                case DOOR_OPENING:
-                case DOOR_OPENED:
-                case DOOR_CLOSING:
-                    updateStatusOnDoorFailure();
-                    break;
-                default:
-                    throwIllegalStateTransitionException(doorFailure);
-            }
-        }
-
-        public void onDoorOpen(DoorOpen doorOpen) {
-            switch (currentState.getToken()) {
-                case JUST_ARRIVED:
-                case DOOR_OPENING:
-                case DOOR_CLOSING:
-                    updateStatusOnDoorOpen();
-                    break;
-                default:
-                    throwIllegalStateTransitionException(doorOpen);
-            }
-        }
-
-        public void onDoorOpened(DoorOpened doorOpened) {
-            switch (currentState.getToken()) {
-                case DOOR_OPENING:
-                    updateStatusOnDoorOpened();
-                    break;
-                default:
-                    throwIllegalStateTransitionException(doorOpened);
-            }
-        }
-
-        public void onEmergency() {
-            updateStatusOnEmergency();
-        }
-
-        private void onFloorRequested(FloorRequested floorRequested) {
-            int toFloor = floorRequested.getToFloor();
-
-            switch (currentState.getToken()) {
-                case IDLE:
-                    if (toFloor > currentFloor) {
-                        upwardsTargetFloors.offer(toFloor);
-                        toMovingUp();
-                    } else if (toFloor < currentFloor) {
-                        downwardsTargetFloors.offer(toFloor);
-                        toMovingDown();
-                    } else {
-                        FSM_LOGGER.info("Currently at the requested floor: " + toFloor);
-                    }
-                    break;
-                case MOVING_UP:
-                    if (isFloorAlreadyRequested(toFloor)) {
-                        FSM_LOGGER.info("Floor {} is already requested.", toFloor);
-                    } else {
-                        if (toFloor > currentFloor) {
-                            upwardsTargetFloors.offer(toFloor);
-                        } else if (toFloor <= currentFloor) {
-                            downwardsTargetFloors.offer(toFloor);
-                        }
-                    }
-                    break;
-                case MOVING_DOWN:
-                    if (isFloorAlreadyRequested(toFloor)) {
-                        FSM_LOGGER.info("Floor {} is already requested.", toFloor);
-                    } else {
-                        if (toFloor >= currentFloor) {
-                            upwardsTargetFloors.offer(toFloor);
-                        } else if (toFloor < currentFloor) {
-                            downwardsTargetFloors.offer(toFloor);
-                        }
-                    }
-                    break;
-                case JUST_ARRIVED:
-                case DOOR_OPENING:
-                case DOOR_OPENED:
-                case DOOR_CLOSING:
-                case READY_TO_MOVE:
-                    if (isFloorAlreadyRequested(toFloor)) {
-                        FSM_LOGGER.info("Floor {} is already requested.", toFloor);
-                    } else {
-                        if (toFloor > currentFloor) {
-                            upwardsTargetFloors.offer(toFloor);
-                        } else if (toFloor < currentFloor) {
-                            downwardsTargetFloors.offer(toFloor);
-                        } else {
-                            FSM_LOGGER.info("Currently at the requested floor: " + toFloor);
-                        }
-                    }
-                    break;
-                default:
-                    throwIllegalStateTransitionException(floorRequested);
-            }
-        }
-
-        private void onMaintain(Maintain maintain) {
-            switch (currentState.getToken()) {
-                case IDLE:
-                    updateStatusOnMaintain();
-                    break;
-            }
-        }
-
-        public void onPowerOff(PowerOff powerOff) {
-            updateStatusOnMaintain();
-        }
-
-        public void onUserWaitingRequest(UserWaiting userWaiting) {
-
-        }
-
-        void updateStatusOnBackToService() {
-            currentState = StateFactory.createIdle();
-        }
-
-        void updateStatusOnEmergency() {
-            currentState = StateFactory.createMaintenance();
-        }
-
-        void toMovingUp() {
-            direction = Direction.UP;
-            currentState = StateFactory.createMovingUp();
-            // doMovingUp()
-            // stopMotor()
-        }
-
-        void toMovingDown() {
-            direction = Direction.DOWN;
-            currentState = StateFactory.createMovingDown();
-            // doMovingDown()
-            // stopMotor()
-        }
-
-        void updateStatusOnMaintain() {
-            currentState = StateFactory.createMaintenance();
-        }
-
-        void updateStatusOnArrive(int arrivedFloor) {
-
-            currentFloor = arrivedFloor;
-
-            if (isFloorAlreadyRequested(arrivedFloor)) {
-                currentState = StateFactory.createJustArrived();
-            }
-
-            // otherwise just bypass
-        }
-
-        private boolean isFloorAlreadyRequested(int arrivedFloor) {
-            return upwardsTargetFloors.contains(arrivedFloor) || downwardsTargetFloors.contains(arrivedFloor);
-        }
-
-        void updateStatusOnDoorOpen() {
-            currentState = StateFactory.createDoorOpening();
-        }
-
-        void updateStatusOnDoorFailure() {
-            currentState = StateFactory.createMaintenance();
-        }
-
-        void updateStatusOnDoorOpened() {
-            currentState = StateFactory.createDoorOpened();
-        }
-
-        void updateStatusOnDoorClosed() {
-            currentState = StateFactory.createReadyToMove();
-        }
-
-        void toDoorClosing() {
-            currentState = StateFactory.createDoorClosing();
-        }
-
-        void toReadyToMove() {
-            currentState = StateFactory.createReadyToMove();
-        }
-
-        private void throwIllegalStateTransitionException(Event event) {
-            String exceptionMessage = "Event: " + event.getToken() + " should not happen under state: " + currentState.getToken();
-
-            FSM_LOGGER.fatal(exceptionMessage);
-
-            throw new IllegalArgumentException(exceptionMessage);
-        }
-
+    PriorityQueue<Integer> getDownwardsTargetFloors() {
+        return downwardsTargetFloors;
     }
 }
