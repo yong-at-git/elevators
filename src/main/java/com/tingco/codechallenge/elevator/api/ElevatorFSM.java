@@ -23,6 +23,7 @@ import org.apache.logging.log4j.Logger;
 class ElevatorFSM {
     private final ElevatorImpl elevator;
     private static final Logger LOGGER = LogManager.getLogger(ElevatorFSM.class);
+    private volatile boolean isMotorRunning = false;
 
     ElevatorFSM(ElevatorImpl elevator) {
         this.elevator = elevator;
@@ -254,18 +255,25 @@ class ElevatorFSM {
     }
 
     private void movingUp(Elevator.Direction requestDirection) {
-        LOGGER.info("Moving down upon requested direction: {}", requestDirection);
+        LOGGER.info("Moving up upon requested direction: {}", requestDirection);
+        this.isMotorRunning = true;
 
         this.elevator.setDirection(requestDirection);
         this.elevator.setCurrentState(StateFactory.createMovingUp());
         doMovingUp();
-        stopMotor();
     }
 
     private void doMovingUp() {
         LOGGER.info("Moving up.");
+
         try {
-            Thread.sleep(2 * 1000);
+            while (isMotorRunning) {
+                Thread.sleep(1 * 1000);
+                int currentFloor = this.elevator.currentFloor();
+                int arrivingFloor = currentFloor + 1;
+                this.elevator.getEventBus().post(EventFactory.createArriveFloor(arrivingFloor));
+                Thread.sleep(500);
+            }
         } catch (InterruptedException e) {
             stopMotor();
             LOGGER.info("Emergency happened.");
@@ -274,22 +282,30 @@ class ElevatorFSM {
     }
 
     private void stopMotor() {
+        this.isMotorRunning = false;
         LOGGER.info("Stopping motor.");
     }
 
     private void movingDown(Elevator.Direction requestDirection) {
         LOGGER.info("Moving down upon requested direction: {}", requestDirection);
+        this.isMotorRunning = true;
 
         this.elevator.setDirection(requestDirection);
         this.elevator.setCurrentState(StateFactory.createMovingDown());
         doMovingDown();
-        stopMotor();
     }
 
     private void doMovingDown() {
         LOGGER.info("Moving down");
         try {
-            Thread.sleep(2 * 1000);
+            while (isMotorRunning) {
+                Thread.sleep(1 * 1000);
+                int currentFloor = this.elevator.currentFloor();
+                int arrivingFloor = currentFloor - 1;
+                this.elevator.getEventBus().post(EventFactory.createArriveFloor(arrivingFloor));
+                Thread.sleep(500);
+            }
+
         } catch (InterruptedException e) {
             stopMotor();
             LOGGER.info("Emergency happened.");
@@ -305,7 +321,14 @@ class ElevatorFSM {
         this.elevator.setCurrentFloor(arrivedFloor);
 
         if (isFloorAlreadyRequested(arrivedFloor)) {
+            stopMotor();
             this.elevator.setCurrentState(StateFactory.createJustArrived());
+            if (this.elevator.isOnUpPath()) {
+                this.elevator.getUpwardsTargetFloors().poll();
+            } else {
+                this.elevator.getDownwardsTargetFloors().poll();
+            }
+            this.elevator.getEventBus().post(EventFactory.createDoorOpen());
         }
         // otherwise just bypass
     }
@@ -317,6 +340,15 @@ class ElevatorFSM {
 
     private void updateStatusOnDoorOpen() {
         this.elevator.setCurrentState(StateFactory.createDoorOpening());
+        try {
+            LOGGER.info("Opening door.");
+            Thread.sleep(1 * 1000);
+        } catch (InterruptedException e) {
+            LOGGER.info("Emergency happened.");
+            elevator.eventBus.post(EventFactory.createEmergency());
+        }
+
+        this.elevator.getEventBus().post("");
     }
 
     private void updateStatusOnDoorFailure() {
@@ -358,6 +390,6 @@ class ElevatorFSM {
         String exceptionMessage = "Event: " + event.getToken() + " should not happen under state: " + elevator.getCurrentState().getToken();
 
         LOGGER.fatal(exceptionMessage);
-        throw new IllegalArgumentException(exceptionMessage);
+        throw new IllegalStateTransitionException(exceptionMessage);
     }
 }

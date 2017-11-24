@@ -2,6 +2,7 @@ package com.tingco.codechallenge.elevator.api;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.tingco.codechallenge.elevator.api.events.EventFactory;
 import com.tingco.codechallenge.elevator.api.events.impl.ArriveFloor;
 import com.tingco.codechallenge.elevator.api.events.impl.BackToService;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorClosed;
@@ -35,10 +36,10 @@ public class ElevatorImpl implements Elevator {
     @Autowired
     EventBus eventBus;
 
-    private Direction direction = Direction.NONE;
+    private volatile Direction direction = Direction.NONE;
     private ElevatorFSM fsm = new ElevatorFSM(this);
-    private ElevatorState currentState = StateFactory.createIdle();
-    private int currentFloor = 0;
+    private volatile ElevatorState currentState = StateFactory.createIdle();
+    private volatile int currentFloor = 0;
     private int id;
 
     private PriorityQueue<Integer> upwardsTargetFloors = new PriorityQueue<>();
@@ -83,21 +84,7 @@ public class ElevatorImpl implements Elevator {
     }
 
     @Override public void moveElevator(int toFloor) {
-        // Two events can trigger it:
-        // 1. user pressed button from waiting floor
-        // 2. user pressed floor button from inside of the elevator
-        // TODO: handle the case when user pressed up button but eventually chose to go lower floor
-        Direction towards = getDirectionForRequest(toFloor);
-
-        if (!isBusy()) {
-            this.direction = towards;
-        }
-
-        if (Direction.UP.equals(towards)) {
-            this.upwardsTargetFloors.offer(toFloor);
-        } else if (Direction.DOWN.equals(towards)) {
-            this.downwardsTargetFloors.offer(toFloor);
-        }
+        this.eventBus.post(EventFactory.createFloorRequested(toFloor));
     }
 
     @Override public boolean isBusy() {
@@ -145,6 +132,7 @@ public class ElevatorImpl implements Elevator {
 
     @Subscribe
     public void onArrive(ArriveFloor arriveFloor) {
+        LOGGER.info("Arriving floor: {}", arriveFloor.getAtFloor());
         this.fsm.onArrive(arriveFloor);
     }
 
