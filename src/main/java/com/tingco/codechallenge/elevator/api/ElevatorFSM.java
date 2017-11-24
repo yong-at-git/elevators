@@ -230,7 +230,6 @@ class ElevatorFSM {
             case DOOR_OPENING:
             case DOOR_OPENED:
             case DOOR_CLOSING:
-            case READY_TO_MOVE:
                 if (isFloorAlreadyRequested(toFloor)) {
                     LOGGER.info("Floor {} is already requested.", toFloor);
                 } else {
