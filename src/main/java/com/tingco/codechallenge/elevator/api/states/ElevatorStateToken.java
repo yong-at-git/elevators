@@ -33,10 +33,6 @@ public enum ElevatorStateToken {
      */
     DOOR_CLOSING,
     /**
-     * The door is completely closed and elevator is ready to move up or down.
-     */
-    READY_TO_MOVE,
-    /**
      * Not moving, without pending request and ready for service;
      */
     MAINTENANCE

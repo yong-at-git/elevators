@@ -123,7 +123,6 @@ class ElevatorFSM {
             case DOOR_OPENING:
             case DOOR_OPENED:
             case DOOR_CLOSING:
-            case READY_TO_MOVE:
                 updateStatusOnFloorRequested(floorRequested);
                 break;
             default:
@@ -154,7 +153,6 @@ class ElevatorFSM {
             case DOOR_OPENING:
             case DOOR_OPENED:
             case DOOR_CLOSING:
-            case READY_TO_MOVE:
                 updateStatusOnUserWaitingRequest(userWaiting);
                 break;
             default:

@@ -8,7 +8,6 @@ import com.tingco.codechallenge.elevator.api.states.impl.JustArrived;
 import com.tingco.codechallenge.elevator.api.states.impl.Maintenance;
 import com.tingco.codechallenge.elevator.api.states.impl.MovingDown;
 import com.tingco.codechallenge.elevator.api.states.impl.MovingUp;
-import com.tingco.codechallenge.elevator.api.states.impl.ReadyToMove;
 
 /**
  * Created by Yong Huang on 2017-11-23.
@@ -48,9 +47,5 @@ public class StateFactory {
 
     public static final MovingDown createMovingDown() {
         return new MovingDown();
-    }
-
-    public static final ReadyToMove createReadyToMove() {
-        return new ReadyToMove();
     }
 }
