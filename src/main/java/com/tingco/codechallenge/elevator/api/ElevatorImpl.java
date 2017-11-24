@@ -17,6 +17,7 @@ import com.tingco.codechallenge.elevator.api.events.impl.OpenDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
 import com.tingco.codechallenge.elevator.api.events.impl.UserWaiting;
 import com.tingco.codechallenge.elevator.api.states.ElevatorState;
+import com.tingco.codechallenge.elevator.api.states.ElevatorStateToken;
 import com.tingco.codechallenge.elevator.api.states.StateFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -111,6 +112,10 @@ public class ElevatorImpl implements Elevator {
     void setCurrentState(ElevatorState newState) {
         LOGGER.info("Setting state from: {} to: {}", this.getCurrentState().getToken(), newState.getToken());
         this.currentState = newState;
+
+        if (ElevatorStateToken.IDLE.equals(newState.getToken())) {
+            LOGGER.info("The recorded events: {}", this.fsm.getEVENT_LOG());
+        }
     }
 
     void setDirection(Direction direction) {

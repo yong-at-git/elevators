@@ -2,6 +2,7 @@ package com.tingco.codechallenge.elevator.api;
 
 import com.tingco.codechallenge.elevator.api.events.Event;
 import com.tingco.codechallenge.elevator.api.events.EventFactory;
+import com.tingco.codechallenge.elevator.api.events.EventToken;
 import com.tingco.codechallenge.elevator.api.events.impl.ArriveFloor;
 import com.tingco.codechallenge.elevator.api.events.impl.BackToService;
 import com.tingco.codechallenge.elevator.api.events.impl.CloseDoor;
@@ -18,6 +19,9 @@ import com.tingco.codechallenge.elevator.api.states.StateFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedDeque;
+
 /**
  * Created by Yong Huang on 2017-11-24.
  */
@@ -25,6 +29,7 @@ class ElevatorFSM {
     private final ElevatorImpl elevator;
     private static final Logger LOGGER = LogManager.getLogger(ElevatorFSM.class);
     private volatile boolean isMotorRunning = false;
+    private final Queue<EventToken> EVENT_LOG = new ConcurrentLinkedDeque<>();
 
     ElevatorFSM(ElevatorImpl elevator) {
         this.elevator = elevator;
@@ -38,6 +43,7 @@ class ElevatorFSM {
         switch (elevator.getCurrentState().getToken()) {
             case MOVING_UP:
             case MOVING_DOWN:
+                EVENT_LOG.offer(arriveFloor.getToken());
                 updateStatusOnArrive(arriveFloor.getAtFloor());
                 break;
             default:
@@ -48,6 +54,7 @@ class ElevatorFSM {
     void onBackToService(BackToService backToService) {
         switch (elevator.getCurrentState().getToken()) {
             case MAINTENANCE:
+                EVENT_LOG.offer(backToService.getToken());
                 updateStatusOnBackToService();
                 break;
             default:
@@ -58,6 +65,7 @@ class ElevatorFSM {
     void onCloseDoor(CloseDoor closeDoor) {
         switch (elevator.getCurrentState().getToken()) {
             case DOOR_OPENED:
+                EVENT_LOG.offer(closeDoor.getToken());
                 updateStatusOnCloseDoor();
                 break;
             default:
@@ -68,6 +76,7 @@ class ElevatorFSM {
     void onDoorClosed(DoorClosed doorClosed) {
         switch (elevator.getCurrentState().getToken()) {
             case DOOR_CLOSING:
+                EVENT_LOG.offer(doorClosed.getToken());
                 updateStatusOnDoorClosed();
                 break;
             default:
@@ -81,6 +90,7 @@ class ElevatorFSM {
             case DOOR_OPENING:
             case DOOR_OPENED:
             case DOOR_CLOSING:
+                EVENT_LOG.offer(doorFailure.getToken());
                 updateStatusOnDoorFailure();
                 break;
             default:
@@ -93,6 +103,7 @@ class ElevatorFSM {
             case JUST_ARRIVED:
             case DOOR_OPENING:
             case DOOR_CLOSING:
+                EVENT_LOG.offer(openDoor.getToken());
                 updateStatusOnOpenDoor();
                 break;
             default:
@@ -103,6 +114,7 @@ class ElevatorFSM {
     void onDoorOpened(DoorOpened doorOpened) {
         switch (elevator.getCurrentState().getToken()) {
             case DOOR_OPENING:
+                EVENT_LOG.offer(doorOpened.getToken());
                 updateStatusOnDoorOpened();
                 break;
             default:
@@ -123,6 +135,7 @@ class ElevatorFSM {
             case DOOR_OPENING:
             case DOOR_OPENED:
             case DOOR_CLOSING:
+                EVENT_LOG.offer(floorRequested.getToken());
                 updateStatusOnFloorRequested(floorRequested);
                 break;
             default:
@@ -133,6 +146,7 @@ class ElevatorFSM {
     void onMaintain(Maintain maintain) {
         switch (elevator.getCurrentState().getToken()) {
             case IDLE:
+                EVENT_LOG.offer(maintain.getToken());
                 updateStatusOnMaintain();
                 break;
             default:
@@ -141,6 +155,7 @@ class ElevatorFSM {
     }
 
     void onPowerOff(PowerOff powerOff) {
+        EVENT_LOG.offer(powerOff.getToken());
         updateStatusOnPowerOff();
     }
 
@@ -153,6 +168,7 @@ class ElevatorFSM {
             case DOOR_OPENING:
             case DOOR_OPENED:
             case DOOR_CLOSING:
+                EVENT_LOG.offer(userWaiting.getToken());
                 updateStatusOnUserWaitingRequest(userWaiting);
                 break;
             default:
@@ -423,5 +439,9 @@ class ElevatorFSM {
 
         LOGGER.fatal(exceptionMessage);
         throw new IllegalStateTransitionException(exceptionMessage);
+    }
+
+    Queue<EventToken> getEVENT_LOG() {
+        return EVENT_LOG;
     }
 }
