@@ -3,10 +3,11 @@ package com.tingco.codechallenge.elevator.api.events;
 import com.tingco.codechallenge.elevator.api.ElevatorImpl;
 import com.tingco.codechallenge.elevator.api.events.impl.ArriveFloor;
 import com.tingco.codechallenge.elevator.api.events.impl.BackToService;
+import com.tingco.codechallenge.elevator.api.events.impl.CloseDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorClosed;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorFailure;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorInterrupted;
-import com.tingco.codechallenge.elevator.api.events.impl.DoorOpen;
+import com.tingco.codechallenge.elevator.api.events.impl.OpenDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorOpened;
 import com.tingco.codechallenge.elevator.api.events.impl.Emergency;
 import com.tingco.codechallenge.elevator.api.events.impl.FloorRequested;
@@ -30,6 +31,10 @@ public class EventFactory {
         return new BackToService();
     }
 
+    public static final CloseDoor createCloseDoor(){
+        return new CloseDoor();
+    }
+
     public static final DoorClosed createDoorClosed() {
         return new DoorClosed();
     }
@@ -42,8 +47,8 @@ public class EventFactory {
         return new DoorInterrupted();
     }
 
-    public static final DoorOpen createDoorOpen() {
-        return new DoorOpen();
+    public static final OpenDoor createOpenDoor() {
+        return new OpenDoor();
     }
 
     public static final DoorOpened createDoorOpened() {

@@ -5,14 +5,15 @@ import com.google.common.eventbus.Subscribe;
 import com.tingco.codechallenge.elevator.api.events.EventFactory;
 import com.tingco.codechallenge.elevator.api.events.impl.ArriveFloor;
 import com.tingco.codechallenge.elevator.api.events.impl.BackToService;
+import com.tingco.codechallenge.elevator.api.events.impl.CloseDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorClosed;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorFailure;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorInterrupted;
-import com.tingco.codechallenge.elevator.api.events.impl.DoorOpen;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorOpened;
 import com.tingco.codechallenge.elevator.api.events.impl.Emergency;
 import com.tingco.codechallenge.elevator.api.events.impl.FloorRequested;
 import com.tingco.codechallenge.elevator.api.events.impl.Maintain;
+import com.tingco.codechallenge.elevator.api.events.impl.OpenDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
 import com.tingco.codechallenge.elevator.api.events.impl.UserWaiting;
 import com.tingco.codechallenge.elevator.api.states.ElevatorState;
@@ -142,9 +143,13 @@ public class ElevatorImpl implements Elevator {
     }
 
     @Subscribe
+    public void onCloseDoor(CloseDoor closeDoor) {
+        this.fsm.onCloseDoor(closeDoor);
+    }
+
+    @Subscribe
     public void onDoorClosed(DoorClosed doorClosed) {
         this.fsm.onDoorClosed(doorClosed);
-
     }
 
     @Subscribe
@@ -158,8 +163,8 @@ public class ElevatorImpl implements Elevator {
     }
 
     @Subscribe
-    public void onDoorOpen(DoorOpen doorOpen) {
-        this.fsm.onDoorOpen(doorOpen);
+    public void onOpenDoor(OpenDoor openDoor) {
+        this.fsm.onOpenDoor(openDoor);
 
     }
 

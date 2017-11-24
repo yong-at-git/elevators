@@ -6,10 +6,11 @@ package com.tingco.codechallenge.elevator.api.events;
 public enum EventToken {
     ARRIVE,
     BACK_TO_SERVICE,
+    CLOSE_DOOR,
     DOOR_CLOSED,
     DOOR_FAILURE,
     DOOR_INTERRUPTED,
-    DOOR_OPEN,
+    OPEN_DOOR,
     DOOR_OPENED,
     EMERGENCY,
     FLOOR_REQUESTED,

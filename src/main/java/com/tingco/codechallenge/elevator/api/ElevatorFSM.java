@@ -4,13 +4,14 @@ import com.tingco.codechallenge.elevator.api.events.Event;
 import com.tingco.codechallenge.elevator.api.events.EventFactory;
 import com.tingco.codechallenge.elevator.api.events.impl.ArriveFloor;
 import com.tingco.codechallenge.elevator.api.events.impl.BackToService;
+import com.tingco.codechallenge.elevator.api.events.impl.CloseDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorClosed;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorFailure;
-import com.tingco.codechallenge.elevator.api.events.impl.DoorOpen;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorOpened;
 import com.tingco.codechallenge.elevator.api.events.impl.FloorMovementRequest;
 import com.tingco.codechallenge.elevator.api.events.impl.FloorRequested;
 import com.tingco.codechallenge.elevator.api.events.impl.Maintain;
+import com.tingco.codechallenge.elevator.api.events.impl.OpenDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
 import com.tingco.codechallenge.elevator.api.events.impl.UserWaiting;
 import com.tingco.codechallenge.elevator.api.states.StateFactory;
@@ -54,9 +55,19 @@ class ElevatorFSM {
         }
     }
 
+    void onCloseDoor(CloseDoor closeDoor) {
+        switch (elevator.getCurrentState().getToken()) {
+            case DOOR_OPENED:
+                updateStatusOnCloseDoor();
+                break;
+            default:
+                throwIllegalStateTransitionException(closeDoor);
+        }
+    }
+
     void onDoorClosed(DoorClosed doorClosed) {
         switch (elevator.getCurrentState().getToken()) {
-            case DOOR_OPENING:
+            case DOOR_CLOSING:
                 updateStatusOnDoorClosed();
                 break;
             default:
@@ -77,15 +88,15 @@ class ElevatorFSM {
         }
     }
 
-    void onDoorOpen(DoorOpen doorOpen) {
+    void onOpenDoor(OpenDoor openDoor) {
         switch (elevator.getCurrentState().getToken()) {
             case JUST_ARRIVED:
             case DOOR_OPENING:
             case DOOR_CLOSING:
-                updateStatusOnDoorOpen();
+                updateStatusOnOpenDoor();
                 break;
             default:
-                throwIllegalStateTransitionException(doorOpen);
+                throwIllegalStateTransitionException(openDoor);
         }
     }
 
@@ -149,6 +160,20 @@ class ElevatorFSM {
             default:
                 throwIllegalStateTransitionException(userWaiting);
         }
+    }
+
+    private void updateStatusOnCloseDoor() {
+        this.elevator.setCurrentState(StateFactory.createDoorClosing());
+
+        try {
+            LOGGER.info("Closing door.");
+            Thread.sleep(1 * 1000);
+        } catch (InterruptedException e) {
+            LOGGER.info("Emergency happened.");
+            elevator.eventBus.post(EventFactory.createEmergency());
+        }
+
+        this.elevator.getEventBus().post(EventFactory.createDoorClosed());
     }
 
     private void updateStatusOnFloorRequested(FloorRequested floorRequested) {
@@ -328,7 +353,7 @@ class ElevatorFSM {
             } else {
                 this.elevator.getDownwardsTargetFloors().poll();
             }
-            this.elevator.getEventBus().post(EventFactory.createDoorOpen());
+            this.elevator.getEventBus().post(EventFactory.createOpenDoor());
         }
         // otherwise just bypass
     }
@@ -338,8 +363,9 @@ class ElevatorFSM {
             || this.elevator.getDownwardsTargetFloors().contains(arrivedFloor);
     }
 
-    private void updateStatusOnDoorOpen() {
+    private void updateStatusOnOpenDoor() {
         this.elevator.setCurrentState(StateFactory.createDoorOpening());
+
         try {
             LOGGER.info("Opening door.");
             Thread.sleep(1 * 1000);
@@ -348,7 +374,7 @@ class ElevatorFSM {
             elevator.eventBus.post(EventFactory.createEmergency());
         }
 
-        this.elevator.getEventBus().post("");
+        this.elevator.getEventBus().post(EventFactory.createDoorOpened());
     }
 
     private void updateStatusOnDoorFailure() {
@@ -357,31 +383,40 @@ class ElevatorFSM {
 
     private void updateStatusOnDoorOpened() {
         this.elevator.setCurrentState(StateFactory.createDoorOpened());
+
+        try {
+            LOGGER.info("Door opened. Waiting for user to get off and on.");
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            LOGGER.info("Emergency happened.");
+            elevator.eventBus.post(EventFactory.createEmergency());
+        }
+
+        this.elevator.getEventBus().post(EventFactory.createCloseDoor());
     }
 
     private void updateStatusOnDoorClosed() {
-        this.elevator.setCurrentState(StateFactory.createReadyToMove());
-
         if (this.elevator.getDownwardsTargetFloors().isEmpty() && this.elevator.getUpwardsTargetFloors().isEmpty()) {
-            // none request left, going idle
+            LOGGER.info("Door Closed. No remaining request. Going idle.");
             this.elevator.setCurrentState(StateFactory.createIdle());
             this.elevator.setDirection(Elevator.Direction.NONE);
         } else if (this.elevator.getDownwardsTargetFloors().isEmpty()) {
-            // only upwards request, going up
-            this.elevator.setCurrentState(StateFactory.createMovingUp());
-            this.elevator.setDirection(Elevator.Direction.UP);
+            LOGGER.info("Door Closed. No upwards request left. Going up.");
+            int toFloor = this.elevator.getUpwardsTargetFloors().peek();
+            updateStatusOnFloorRequested(EventFactory.createFloorRequested(toFloor));
         } else if (this.elevator.getUpwardsTargetFloors().isEmpty()) {
-            // only downwards request, going down
-            this.elevator.setCurrentState(StateFactory.createMovingDown());
-            this.elevator.setDirection(Elevator.Direction.DOWN);
+            LOGGER.info("Door Closed. No downwards request left. Going down.");
+            int toFloor = this.elevator.getDownwardsTargetFloors().peek();
+            updateStatusOnFloorRequested(EventFactory.createFloorRequested(toFloor));
         } else {
-            // still have both upwards and downwards requests
             if (this.elevator.isOnUpPath()) {
-                // keep moving up
-                this.elevator.setCurrentState(StateFactory.createMovingUp());
+                LOGGER.info("Door Closed. Keep moving up.");
+                int toFloor = this.elevator.getUpwardsTargetFloors().peek();
+                updateStatusOnFloorRequested(EventFactory.createFloorRequested(toFloor));
             } else {
-                // keep moving down
-                this.elevator.setCurrentState(StateFactory.createMovingDown());
+                LOGGER.info("Door Closed. Keep moving down.");
+                int toFloor = this.elevator.getDownwardsTargetFloors().peek();
+                updateStatusOnFloorRequested(EventFactory.createFloorRequested(toFloor));
             }
         }
     }
