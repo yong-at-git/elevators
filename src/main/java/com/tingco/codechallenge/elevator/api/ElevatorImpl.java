@@ -11,11 +11,11 @@ import com.tingco.codechallenge.elevator.api.events.impl.DoorFailure;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorInterrupted;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorOpened;
 import com.tingco.codechallenge.elevator.api.events.impl.Emergency;
+import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithDirectionPreference;
 import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithNumberPreference;
 import com.tingco.codechallenge.elevator.api.events.impl.Maintain;
 import com.tingco.codechallenge.elevator.api.events.impl.OpenDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
-import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithDirectionPreference;
 import com.tingco.codechallenge.elevator.api.states.ElevatorState;
 import com.tingco.codechallenge.elevator.api.states.ElevatorStateToken;
 import com.tingco.codechallenge.elevator.api.states.StateFactory;
@@ -124,8 +124,6 @@ public class ElevatorImpl implements Elevator {
     }
 
     void setCurrentFloor(int newFloor) {
-        LOGGER.info("Setting floor from: {} to {}", this.currentFloor, newFloor);
-
         this.currentFloor = newFloor;
     }
 
@@ -139,7 +137,6 @@ public class ElevatorImpl implements Elevator {
 
     @Subscribe
     public void onArrive(ArriveFloor arriveFloor) {
-        LOGGER.info("Arriving floor: {}", arriveFloor.getAtFloor());
         this.fsm.onArrive(arriveFloor);
     }
 

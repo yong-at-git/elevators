@@ -200,17 +200,24 @@ class ElevatorFSM {
 
         if (ElevatorStateToken.IDLE.equals(this.elevator.getCurrentState().getToken())) {
             // only move while idle, otherwise leave the request queue to be handled.
+            this.elevator.setDirection(towards);
             move(towards);
         }
     }
 
     private void updateStatusOnUserWaitingRequest(FloorRequestedWithDirectionPreference floorRequestedWithDirectionPreference) {
-        handleFloorRequestQueue(floorRequestedWithDirectionPreference);
+        Elevator.Direction towards = handleFloorRequestQueue(floorRequestedWithDirectionPreference);
 
         if (ElevatorStateToken.IDLE.equals(this.elevator.getCurrentState().getToken())) {
             // only move while idle, otherwise leave the request queue to be handled.
             // move towards preferred direction.
-            move(floorRequestedWithDirectionPreference.getTowards());
+            Elevator.Direction preferredDirection = floorRequestedWithDirectionPreference.getTowards();
+            LOGGER.info(
+                "Floor requested at floor {} and with preferred direction: {}",
+                floorRequestedWithDirectionPreference.getWaitingFloor(),
+                preferredDirection);
+            this.elevator.setDirection(preferredDirection);
+            move(towards);
         }
     }
 
@@ -298,27 +305,26 @@ class ElevatorFSM {
     private void move(Elevator.Direction requestedDirection) {
         switch (requestedDirection) {
             case UP:
-                moveUp(requestedDirection);
+                LOGGER.info("Moving up upon requested direction: {}", requestedDirection);
+
+                this.isMotorRunning = true;
+                this.elevator.setCurrentState(StateFactory.createMovingUp());
+                doMovingUp();
                 break;
             case DOWN:
-                moveDown(requestedDirection);
+                LOGGER.info("Moving down upon requested direction: {}", requestedDirection);
+
+                this.isMotorRunning = true;
+                this.elevator.setCurrentState(StateFactory.createMovingDown());
+                doMovingDown();
                 break;
             default:
+                LOGGER.info("No movement on direction: {}", requestedDirection);
                 break;
         }
     }
 
-    private void moveUp(Elevator.Direction requestDirection) {
-        LOGGER.info("Moving up upon requested direction: {}", requestDirection);
-        this.isMotorRunning = true;
-
-        this.elevator.setDirection(requestDirection);
-        this.elevator.setCurrentState(StateFactory.createMovingUp());
-        doMovingUp();
-    }
-
     private void doMovingUp() {
-        LOGGER.info("Moving up.");
         EVENT_LOG.offer(EventToken.MOVING_UP);
 
         try {
@@ -336,17 +342,7 @@ class ElevatorFSM {
         }
     }
 
-    private void moveDown(Elevator.Direction requestDirection) {
-        LOGGER.info("Moving down upon requested direction: {}", requestDirection);
-        this.isMotorRunning = true;
-
-        this.elevator.setDirection(requestDirection);
-        this.elevator.setCurrentState(StateFactory.createMovingDown());
-        doMovingDown();
-    }
-
     private void doMovingDown() {
-        LOGGER.info("Moving down");
         EVENT_LOG.offer(EventToken.MOVING_DOWN);
 
         try {
@@ -375,19 +371,32 @@ class ElevatorFSM {
     }
 
     private void updateStatusOnArrive(int arrivedFloor) {
+        LOGGER.info("Arriving floor: {}", arrivedFloor);
         this.elevator.setCurrentFloor(arrivedFloor);
 
-        if (isFloorAlreadyRequested(arrivedFloor)) {
-            stopMotor();
-            this.elevator.setCurrentState(StateFactory.createJustArrived());
-            if (this.elevator.isOnUpPath()) {
+        if (!isFloorAlreadyRequested(arrivedFloor)) {
+            // bypass unrequested floor
+            return;
+        }
+
+        stopMotor();
+        this.elevator.setCurrentState(StateFactory.createJustArrived());
+        if (this.elevator.isOnUpPath()) {
+            if (this.elevator.getUpwardsTargetFloors().isEmpty()) {
+                // user waiting downstairs and wants to go upstairs
+                this.elevator.getDownwardsTargetFloors().poll();
+            } else {
+                this.elevator.getUpwardsTargetFloors().poll();
+            }
+        } else {
+            if (this.elevator.getDownwardsTargetFloors().isEmpty()) {
+                // user waiting upstairs and wants to go downstairs
                 this.elevator.getUpwardsTargetFloors().poll();
             } else {
                 this.elevator.getDownwardsTargetFloors().poll();
             }
-            this.elevator.getEventBus().post(EventFactory.createOpenDoor());
         }
-        // otherwise just bypass
+        this.elevator.getEventBus().post(EventFactory.createOpenDoor());
     }
 
     private boolean isFloorAlreadyRequested(int arrivedFloor) {

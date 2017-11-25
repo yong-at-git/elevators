@@ -40,8 +40,16 @@ public final class ElevatorControllerEndPoints {
 
     @GetMapping(value = "/demo/{to_floor}")
     @ResponseStatus(value = HttpStatus.OK)
-    public void demoEventHandling(@PathVariable("to_floor") int toFloor) {
-        this.elevatorControllerService.demoEventHandling(toFloor);
+    public void demoFloorRequestWithNumberPreference(@PathVariable("to_floor") int toFloor) {
+        this.elevatorControllerService.demoFloorRequestWithNumberPreference(toFloor);
+    }
+
+    @GetMapping(value = "/demo/{waiting_floor}/{towards}")
+    @ResponseStatus(value = HttpStatus.OK)
+    public void demoFloorRequestWithDirectionPreference(
+        @PathVariable("waiting_floor") int waitingFloor,
+        @PathVariable("towards") ElevatorImpl.Direction towards) {
+        this.elevatorControllerService.demoFloorRequestWithDirectionPreference(waitingFloor, towards);
     }
 
 }

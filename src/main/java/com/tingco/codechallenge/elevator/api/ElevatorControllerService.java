@@ -1,6 +1,7 @@
 package com.tingco.codechallenge.elevator.api;
 
 import com.google.common.eventbus.EventBus;
+import com.tingco.codechallenge.elevator.api.events.EventFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -38,8 +39,12 @@ public class ElevatorControllerService implements ElevatorController {
         this.freeElevators.offer(elevator);
     }
 
-    public void demoEventHandling(int toFloor) {
+    public void demoFloorRequestWithNumberPreference(int toFloor) {
         demoElevator.moveElevator(toFloor);
+    }
+
+    public void demoFloorRequestWithDirectionPreference(int waitingFloor, ElevatorImpl.Direction towards) {
+        this.eventBus.post(EventFactory.createUserWaiting(waitingFloor, towards));
     }
 
     public int requestElevatorId(int toFloor) {
