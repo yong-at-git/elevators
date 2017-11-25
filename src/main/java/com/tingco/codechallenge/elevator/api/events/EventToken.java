@@ -15,6 +15,8 @@ public enum EventToken {
     EMERGENCY,
     FLOOR_REQUESTED,
     MAINTAIN,
+    MOVING_DOWN,
+    MOVING_UP,
     POWER_OFF,
     USER_WAITING
 }

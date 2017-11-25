@@ -11,11 +11,11 @@ import com.tingco.codechallenge.elevator.api.events.impl.DoorFailure;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorInterrupted;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorOpened;
 import com.tingco.codechallenge.elevator.api.events.impl.Emergency;
-import com.tingco.codechallenge.elevator.api.events.impl.FloorRequested;
+import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithNumberPreference;
 import com.tingco.codechallenge.elevator.api.events.impl.Maintain;
 import com.tingco.codechallenge.elevator.api.events.impl.OpenDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
-import com.tingco.codechallenge.elevator.api.events.impl.UserWaiting;
+import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithDirectionPreference;
 import com.tingco.codechallenge.elevator.api.states.ElevatorState;
 import com.tingco.codechallenge.elevator.api.states.ElevatorStateToken;
 import com.tingco.codechallenge.elevator.api.states.StateFactory;
@@ -115,6 +115,7 @@ public class ElevatorImpl implements Elevator {
 
         if (ElevatorStateToken.IDLE.equals(newState.getToken())) {
             LOGGER.info("The recorded events: {}", this.fsm.getEVENT_LOG());
+            this.fsm.getEVENT_LOG().clear();
         }
     }
 
@@ -186,9 +187,9 @@ public class ElevatorImpl implements Elevator {
     }
 
     @Subscribe
-    private void onFloorRequested(FloorRequested floorRequested) {
-        LOGGER.info("Receiving {} ", floorRequested);
-        this.fsm.onFloorRequested(floorRequested);
+    private void onFloorRequested(FloorRequestedWithNumberPreference floorRequestedWithNumberPreference) {
+        LOGGER.info("Receiving {} ", floorRequestedWithNumberPreference);
+        this.fsm.onFloorRequested(floorRequestedWithNumberPreference);
     }
 
     @Subscribe
@@ -204,9 +205,9 @@ public class ElevatorImpl implements Elevator {
     }
 
     @Subscribe
-    public void onUserWaitingRequest(UserWaiting userWaiting) {
-        LOGGER.info("Receiving {} ", userWaiting);
-        this.fsm.onUserWaitingRequest(userWaiting);
+    public void onUserWaitingRequest(FloorRequestedWithDirectionPreference floorRequestedWithDirectionPreference) {
+        LOGGER.info("Receiving {} ", floorRequestedWithDirectionPreference);
+        this.fsm.onUserWaitingRequest(floorRequestedWithDirectionPreference);
     }
 
     EventBus getEventBus() {

@@ -9,12 +9,13 @@ import com.tingco.codechallenge.elevator.api.events.impl.CloseDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorClosed;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorFailure;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorOpened;
-import com.tingco.codechallenge.elevator.api.events.impl.FloorMovementRequest;
 import com.tingco.codechallenge.elevator.api.events.impl.FloorRequested;
+import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithDirectionPreference;
+import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithNumberPreference;
 import com.tingco.codechallenge.elevator.api.events.impl.Maintain;
 import com.tingco.codechallenge.elevator.api.events.impl.OpenDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
-import com.tingco.codechallenge.elevator.api.events.impl.UserWaiting;
+import com.tingco.codechallenge.elevator.api.states.ElevatorStateToken;
 import com.tingco.codechallenge.elevator.api.states.StateFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -126,7 +127,7 @@ class ElevatorFSM {
         updateStatusOnEmergency();
     }
 
-    void onFloorRequested(FloorRequested floorRequested) {
+    void onFloorRequested(FloorRequestedWithNumberPreference floorRequestedWithNumberPreference) {
         switch (elevator.getCurrentState().getToken()) {
             case IDLE:
             case MOVING_UP:
@@ -135,11 +136,11 @@ class ElevatorFSM {
             case DOOR_OPENING:
             case DOOR_OPENED:
             case DOOR_CLOSING:
-                EVENT_LOG.offer(floorRequested.getToken());
-                updateStatusOnFloorRequested(floorRequested);
+                EVENT_LOG.offer(floorRequestedWithNumberPreference.getToken());
+                updateStatusOnFloorRequested(floorRequestedWithNumberPreference);
                 break;
             default:
-                throwIllegalStateTransitionException(floorRequested);
+                throwIllegalStateTransitionException(floorRequestedWithNumberPreference);
         }
     }
 
@@ -159,7 +160,7 @@ class ElevatorFSM {
         updateStatusOnPowerOff();
     }
 
-    void onUserWaitingRequest(UserWaiting userWaiting) {
+    void onUserWaitingRequest(FloorRequestedWithDirectionPreference floorRequestedWithDirectionPreference) {
         switch (elevator.getCurrentState().getToken()) {
             case IDLE:
             case MOVING_UP:
@@ -168,11 +169,11 @@ class ElevatorFSM {
             case DOOR_OPENING:
             case DOOR_OPENED:
             case DOOR_CLOSING:
-                EVENT_LOG.offer(userWaiting.getToken());
-                updateStatusOnUserWaitingRequest(userWaiting);
+                EVENT_LOG.offer(floorRequestedWithDirectionPreference.getToken());
+                updateStatusOnUserWaitingRequest(floorRequestedWithDirectionPreference);
                 break;
             default:
-                throwIllegalStateTransitionException(userWaiting);
+                throwIllegalStateTransitionException(floorRequestedWithDirectionPreference);
         }
     }
 
@@ -190,17 +191,25 @@ class ElevatorFSM {
         this.elevator.getEventBus().post(EventFactory.createDoorClosed());
     }
 
-    private void updateStatusOnFloorRequested(FloorRequested floorRequested) {
-        Elevator.Direction towards = handleFloorRequestQueue(floorRequested);
-        moving(towards);
+    private void updateStatusOnFloorRequested(FloorRequestedWithNumberPreference floorRequestedWithNumberPreference) {
+        Elevator.Direction towards = handleFloorRequestQueue(floorRequestedWithNumberPreference);
+
+        if (ElevatorStateToken.IDLE.equals(this.elevator.getCurrentState().getToken())) {
+            // only move while idle, otherwise leave the request queue to be handled.
+            moving(towards);
+        }
     }
 
-    private void updateStatusOnUserWaitingRequest(UserWaiting userWaiting) {
-        handleFloorRequestQueue(userWaiting);
-        moving(userWaiting.getTowards());
+    private void updateStatusOnUserWaitingRequest(FloorRequestedWithDirectionPreference floorRequestedWithDirectionPreference) {
+        handleFloorRequestQueue(floorRequestedWithDirectionPreference);
+
+        if (ElevatorStateToken.IDLE.equals(this.elevator.getCurrentState().getToken())) {
+            // only move while idle, otherwise leave the request queue to be handled.
+            moving(floorRequestedWithDirectionPreference.getTowards());
+        }
     }
 
-    private Elevator.Direction handleFloorRequestQueue(FloorMovementRequest floorRequested) {
+    private Elevator.Direction handleFloorRequestQueue(FloorRequested floorRequested) {
         int toFloor = floorRequested.getToFloor();
         Elevator.Direction towards = Elevator.Direction.NONE;
 
@@ -208,13 +217,12 @@ class ElevatorFSM {
             case IDLE:
                 if (toFloor > elevator.currentFloor()) {
                     elevator.getUpwardsTargetFloors().offer(toFloor);
-                    towards = Elevator.Direction.UP;
                 } else if (toFloor < elevator.currentFloor()) {
                     elevator.getDownwardsTargetFloors().offer(toFloor);
-                    towards = Elevator.Direction.DOWN;
                 } else {
                     LOGGER.info("Currently at the requested floor: " + toFloor);
                 }
+
                 break;
             case MOVING_UP:
                 if (isFloorAlreadyRequested(toFloor)) {
@@ -303,6 +311,7 @@ class ElevatorFSM {
 
     private void doMovingUp() {
         LOGGER.info("Moving up.");
+        EVENT_LOG.offer(EventToken.MOVING_UP);
 
         try {
             while (isMotorRunning) {
@@ -335,6 +344,8 @@ class ElevatorFSM {
 
     private void doMovingDown() {
         LOGGER.info("Moving down");
+        EVENT_LOG.offer(EventToken.MOVING_DOWN);
+
         try {
             while (isMotorRunning) {
                 Thread.sleep(1 * 1000);
@@ -416,20 +427,20 @@ class ElevatorFSM {
         } else if (this.elevator.getDownwardsTargetFloors().isEmpty()) {
             LOGGER.info("Door Closed. No upwards request left. Going up.");
             int toFloor = this.elevator.getUpwardsTargetFloors().peek();
-            updateStatusOnFloorRequested(EventFactory.createFloorRequested(toFloor));
+            moving(Elevator.Direction.UP);
         } else if (this.elevator.getUpwardsTargetFloors().isEmpty()) {
             LOGGER.info("Door Closed. No downwards request left. Going down.");
             int toFloor = this.elevator.getDownwardsTargetFloors().peek();
-            updateStatusOnFloorRequested(EventFactory.createFloorRequested(toFloor));
+            moving(Elevator.Direction.DOWN);
         } else {
             if (this.elevator.isOnUpPath()) {
                 LOGGER.info("Door Closed. Keep moving up.");
                 int toFloor = this.elevator.getUpwardsTargetFloors().peek();
-                updateStatusOnFloorRequested(EventFactory.createFloorRequested(toFloor));
+                moving(Elevator.Direction.UP);
             } else {
                 LOGGER.info("Door Closed. Keep moving down.");
                 int toFloor = this.elevator.getDownwardsTargetFloors().peek();
-                updateStatusOnFloorRequested(EventFactory.createFloorRequested(toFloor));
+                moving(Elevator.Direction.DOWN);
             }
         }
     }

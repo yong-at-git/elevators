@@ -10,11 +10,11 @@ import java.util.Objects;
  * <p>
  * Created by Yong Huang on 2017-11-21.
  */
-public class UserWaiting extends FloorMovementRequest {
+public class FloorRequestedWithDirectionPreference extends FloorRequested {
     private int waitingFloor;
     private ElevatorImpl.Direction towards;
 
-    public UserWaiting(int waitingFloor, ElevatorImpl.Direction towards) {
+    public FloorRequestedWithDirectionPreference(int waitingFloor, ElevatorImpl.Direction towards) {
         Objects.requireNonNull(towards);
 
         this.waitingFloor = waitingFloor;
@@ -35,7 +35,7 @@ public class UserWaiting extends FloorMovementRequest {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        UserWaiting that = (UserWaiting) o;
+        FloorRequestedWithDirectionPreference that = (FloorRequestedWithDirectionPreference) o;
 
         if (waitingFloor != that.waitingFloor)
             return false;
@@ -49,7 +49,7 @@ public class UserWaiting extends FloorMovementRequest {
     }
 
     @Override public String toString() {
-        return "UserWaiting{" +
+        return "FloorRequestedWithDirectionPreference{" +
             "waitingFloor=" + waitingFloor +
             ", towards=" + towards +
             '}';

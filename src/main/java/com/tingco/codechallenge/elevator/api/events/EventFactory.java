@@ -7,13 +7,13 @@ import com.tingco.codechallenge.elevator.api.events.impl.CloseDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorClosed;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorFailure;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorInterrupted;
+import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithNumberPreference;
 import com.tingco.codechallenge.elevator.api.events.impl.OpenDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorOpened;
 import com.tingco.codechallenge.elevator.api.events.impl.Emergency;
-import com.tingco.codechallenge.elevator.api.events.impl.FloorRequested;
 import com.tingco.codechallenge.elevator.api.events.impl.Maintain;
 import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
-import com.tingco.codechallenge.elevator.api.events.impl.UserWaiting;
+import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithDirectionPreference;
 
 /**
  * Created by Yong Huang on 2017-11-23.
@@ -59,8 +59,8 @@ public class EventFactory {
         return new Emergency();
     }
 
-    public static final FloorRequested createFloorRequested(int toFloor) {
-        return new FloorRequested(toFloor);
+    public static final FloorRequestedWithNumberPreference createFloorRequested(int toFloor) {
+        return new FloorRequestedWithNumberPreference(toFloor);
     }
 
     public static final Maintain createMaintain() {
@@ -71,7 +71,7 @@ public class EventFactory {
         return new PowerOff();
     }
 
-    public static final UserWaiting createUserWaiting(int atFloor, ElevatorImpl.Direction towards) {
-        return new UserWaiting(atFloor, towards);
+    public static final FloorRequestedWithDirectionPreference createUserWaiting(int atFloor, ElevatorImpl.Direction towards) {
+        return new FloorRequestedWithDirectionPreference(atFloor, towards);
     }
 }
