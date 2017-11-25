@@ -9,7 +9,6 @@ import com.tingco.codechallenge.elevator.api.events.impl.BackToService;
 import com.tingco.codechallenge.elevator.api.events.impl.CloseDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorClosed;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorFailure;
-import com.tingco.codechallenge.elevator.api.events.impl.DoorInterrupted;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorOpened;
 import com.tingco.codechallenge.elevator.api.events.impl.Emergency;
 import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithDirectionPreference;
@@ -24,73 +23,40 @@ import com.tingco.codechallenge.elevator.api.states.StateFactory;
 import com.tingco.codechallenge.elevator.api.validators.FloorValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
 /**
  * Created by Yong Huang on 2017-11-20.
  */
-@Component
 public class ElevatorImpl implements Elevator {
     private static final Logger LOGGER = LogManager.getLogger(ElevatorImpl.class);
-
-    @Autowired
-    EventBus eventBus;
-
-    @Value("${com.tingco.elevator.floor.bottom}")
-    private int bottomFloor;
-
-    @Value("${com.tingco.elevator.floor.top}")
-    private int topFloor;
-
-    @Value("${com.tingco.elevator.door.opening.duration.in.ms}")
-    private int doorOpeningDurationInMs;
-
-    @Value("${com.tingco.elevator.door.opened.waiting.duration.in.ms}")
-    private int doorOpenedWaitingDurationInMs;
-
-    @Value("${com.tingco.elevator.door.closing.duration.in.ms}")
-    private int doorClosingDurationInMs;
-
-    @Value("${com.tingco.elevator.door.closed.waiting.duration.in.ms}")
-    private int doorClosedWaitingDurationInMs;
-
-    @Value("${com.tingco.elevator.move.duration.between.floors.in.ms}")
-    private int movingDurationBetweenFloorsInMs;
-
-    @Value("${com.tingco.elevator.waiting.duration.after.notifying.arriving.in.ms}")
-    private int waitingDurationAfterNotifyingArrivingInMs;
 
     private volatile Direction direction = Direction.NONE;
     private ElevatorFSM fsm = new ElevatorFSM(this);
     private volatile ElevatorState currentState = StateFactory.createIdle();
     private volatile int currentFloor = 0;
     private int id;
+    private EventBus eventBus;
+    private ElevatorConfiguration configuration;
 
     private PriorityQueue<Integer> upwardsTargetFloors = new PriorityQueue<>();
     private PriorityQueue<Integer> downwardsTargetFloors = new PriorityQueue<>(Comparator.reverseOrder());
-
-    @PostConstruct
-    public void init() {
-        this.eventBus.register(this);
-    }
 
     private ElevatorImpl() {
         // non-arg for Spring
     }
 
-    public ElevatorImpl(int id) {
+    public ElevatorImpl(EventBus eventBus, int id, ElevatorConfiguration configuration) {
         this();
         this.id = id;
+        this.eventBus = eventBus;
+        this.configuration = configuration;
     }
 
-    public ElevatorImpl(int currentFloor, int id) {
-        this(id);
+    public ElevatorImpl(EventBus eventBus, int currentFloor, int id, ElevatorConfiguration configuration) {
+        this(eventBus, id, configuration);
         this.currentFloor = currentFloor;
     }
 
@@ -189,11 +155,6 @@ public class ElevatorImpl implements Elevator {
     }
 
     @Subscribe
-    public void onDoorInterrupted(DoorInterrupted doorInterrupted) {
-
-    }
-
-    @Subscribe
     public void onOpenDoor(OpenDoor openDoor) {
         this.fsm.onOpenDoor(openDoor);
 
@@ -202,7 +163,6 @@ public class ElevatorImpl implements Elevator {
     @Subscribe
     public void onDoorOpened(DoorOpened doorOpened) {
         this.fsm.onDoorOpened(doorOpened);
-
     }
 
     @Subscribe
@@ -216,7 +176,7 @@ public class ElevatorImpl implements Elevator {
         LOGGER.info("Receiving {} ", floorRequestedWithNumberPreference);
 
         int toFloor = floorRequestedWithNumberPreference.getToFloor();
-        FloorValidator.validate(toFloor, Range.closed(bottomFloor, topFloor));
+        FloorValidator.validate(toFloor, Range.closed(this.configuration.getBottomFloor(), this.configuration.getTopFloor()));
 
         this.fsm.onFloorRequested(floorRequestedWithNumberPreference);
     }
@@ -238,7 +198,7 @@ public class ElevatorImpl implements Elevator {
         LOGGER.info("Receiving {} ", floorRequestedWithDirectionPreference);
 
         int toFloor = floorRequestedWithDirectionPreference.getToFloor();
-        FloorValidator.validate(toFloor, Range.closed(bottomFloor, topFloor));
+        FloorValidator.validate(toFloor, Range.closed(this.configuration.getBottomFloor(), this.configuration.getTopFloor()));
 
         this.fsm.onUserWaitingRequest(floorRequestedWithDirectionPreference);
     }
@@ -255,27 +215,7 @@ public class ElevatorImpl implements Elevator {
         return downwardsTargetFloors;
     }
 
-    int getDoorOpeningDurationInMs() {
-        return doorOpeningDurationInMs;
-    }
-
-    int getDoorOpenedWaitingDurationInMs() {
-        return doorOpenedWaitingDurationInMs;
-    }
-
-    int getDoorClosingDurationInMs() {
-        return doorClosingDurationInMs;
-    }
-
-    int getDoorClosedWaitingDurationInMs() {
-        return doorClosedWaitingDurationInMs;
-    }
-
-    int getMovingDurationBetweenFloorsInMs() {
-        return movingDurationBetweenFloorsInMs;
-    }
-
-    int getWaitingDurationAfterNotifyingArrivingInMs() {
-        return waitingDurationAfterNotifyingArrivingInMs;
+    public ElevatorConfiguration getConfiguration() {
+        return configuration;
     }
 }

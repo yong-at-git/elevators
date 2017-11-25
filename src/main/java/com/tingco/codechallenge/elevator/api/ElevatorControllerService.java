@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -23,8 +24,7 @@ public class ElevatorControllerService implements ElevatorController {
     @Autowired
     EventBus eventBus;
 
-    @Autowired
-    ElevatorImpl demoElevator;
+    private ElevatorImpl elevator;
 
     @Value("${com.tingco.elevator.floor.bottom}")
     private int bottomFloor;
@@ -32,8 +32,32 @@ public class ElevatorControllerService implements ElevatorController {
     @Value("${com.tingco.elevator.floor.top}")
     private int topFloor;
 
+    @Value("${com.tingco.elevator.door.opening.duration.in.ms}")
+    private int doorOpeningDurationInMs;
+
+    @Value("${com.tingco.elevator.door.opened.waiting.duration.in.ms}")
+    private int doorOpenedWaitingDurationInMs;
+
+    @Value("${com.tingco.elevator.door.closing.duration.in.ms}")
+    private int doorClosingDurationInMs;
+
+    @Value("${com.tingco.elevator.door.closed.waiting.duration.in.ms}")
+    private int doorClosedWaitingDurationInMs;
+
+    @Value("${com.tingco.elevator.move.duration.between.floors.in.ms}")
+    private int movingDurationBetweenFloorsInMs;
+
+    @Value("${com.tingco.elevator.waiting.duration.after.notifying.arriving.in.ms}")
+    private int waitingDurationAfterNotifyingArrivingInMs;
+
     private List<Elevator> elevators = new ArrayList<>();
     private Queue<Elevator> freeElevators = new LinkedBlockingDeque<>();
+
+    @PostConstruct
+    void init() {
+        elevator = new ElevatorImpl(this.eventBus, 1, createElevatorConfiguration());
+        this.eventBus.register(elevator);
+    }
 
     @Override public Elevator requestElevator(int toFloor) {
         // TODO: design the algorithms here
@@ -63,5 +87,18 @@ public class ElevatorControllerService implements ElevatorController {
 
     public int requestElevatorId(int toFloor) {
         return this.requestElevator(toFloor).getId();
+    }
+
+    private ElevatorConfiguration createElevatorConfiguration() {
+        return new ElevatorConfiguration.Builder()
+            .withBottomFloor(bottomFloor)
+            .withTopFloor(topFloor)
+            .withDoorClosingDurationInMs(doorClosingDurationInMs)
+            .withDoorClosedWaitingDurationInMs(doorClosedWaitingDurationInMs)
+            .withDoorOpeningDurationInMs(doorOpeningDurationInMs)
+            .withDoorOpenedWaitingDurationInMs(doorOpenedWaitingDurationInMs)
+            .withMovingDurationBetweenFloorsInMs(movingDurationBetweenFloorsInMs)
+            .withWaitingDurationAfterNotifyingArrivingInMs(waitingDurationAfterNotifyingArrivingInMs)
+            .build();
     }
 }

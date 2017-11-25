@@ -6,14 +6,13 @@ import com.tingco.codechallenge.elevator.api.events.impl.BackToService;
 import com.tingco.codechallenge.elevator.api.events.impl.CloseDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorClosed;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorFailure;
-import com.tingco.codechallenge.elevator.api.events.impl.DoorInterrupted;
-import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithNumberPreference;
-import com.tingco.codechallenge.elevator.api.events.impl.OpenDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.DoorOpened;
 import com.tingco.codechallenge.elevator.api.events.impl.Emergency;
-import com.tingco.codechallenge.elevator.api.events.impl.Maintain;
-import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
 import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithDirectionPreference;
+import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithNumberPreference;
+import com.tingco.codechallenge.elevator.api.events.impl.Maintain;
+import com.tingco.codechallenge.elevator.api.events.impl.OpenDoor;
+import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
 
 /**
  * Created by Yong Huang on 2017-11-23.
@@ -31,7 +30,7 @@ public class EventFactory {
         return new BackToService();
     }
 
-    public static final CloseDoor createCloseDoor(){
+    public static final CloseDoor createCloseDoor() {
         return new CloseDoor();
     }
 
@@ -41,10 +40,6 @@ public class EventFactory {
 
     public static final DoorFailure createDoorFailure() {
         return new DoorFailure();
-    }
-
-    public static final DoorInterrupted createDoorInterrupted() {
-        return new DoorInterrupted();
     }
 
     public static final OpenDoor createOpenDoor() {

@@ -9,7 +9,6 @@ public enum EventToken {
     CLOSE_DOOR,
     DOOR_CLOSED,
     DOOR_FAILURE,
-    DOOR_INTERRUPTED,
     OPEN_DOOR,
     DOOR_OPENED,
     EMERGENCY,
