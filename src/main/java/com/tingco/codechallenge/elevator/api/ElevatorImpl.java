@@ -1,5 +1,6 @@
 package com.tingco.codechallenge.elevator.api;
 
+import com.google.common.collect.Range;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.tingco.codechallenge.elevator.api.events.EventFactory;
@@ -16,12 +17,15 @@ import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithNumbe
 import com.tingco.codechallenge.elevator.api.events.impl.Maintain;
 import com.tingco.codechallenge.elevator.api.events.impl.OpenDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
+import com.tingco.codechallenge.elevator.api.exceptions.OutOfFloorRangeException;
 import com.tingco.codechallenge.elevator.api.states.ElevatorState;
 import com.tingco.codechallenge.elevator.api.states.ElevatorStateToken;
 import com.tingco.codechallenge.elevator.api.states.StateFactory;
+import com.tingco.codechallenge.elevator.api.utils.FloorValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -37,6 +41,12 @@ public class ElevatorImpl implements Elevator {
 
     @Autowired
     EventBus eventBus;
+
+    @Value("${com.tingco.elevator.floor.bottom}")
+    private int bottomFloor;
+
+    @Value("${com.tingco.elevator.floor.top}")
+    private int topFloor;
 
     private volatile Direction direction = Direction.NONE;
     private ElevatorFSM fsm = new ElevatorFSM(this);
@@ -184,8 +194,12 @@ public class ElevatorImpl implements Elevator {
     }
 
     @Subscribe
-    private void onFloorRequested(FloorRequestedWithNumberPreference floorRequestedWithNumberPreference) {
+    private void onFloorRequested(FloorRequestedWithNumberPreference floorRequestedWithNumberPreference) throws OutOfFloorRangeException {
         LOGGER.info("Receiving {} ", floorRequestedWithNumberPreference);
+
+        int toFloor = floorRequestedWithNumberPreference.getToFloor();
+        FloorValidator.validate(toFloor, Range.closed(bottomFloor, topFloor));
+
         this.fsm.onFloorRequested(floorRequestedWithNumberPreference);
     }
 
@@ -202,8 +216,12 @@ public class ElevatorImpl implements Elevator {
     }
 
     @Subscribe
-    public void onUserWaitingRequest(FloorRequestedWithDirectionPreference floorRequestedWithDirectionPreference) {
+    public void onUserWaitingRequest(FloorRequestedWithDirectionPreference floorRequestedWithDirectionPreference) throws OutOfFloorRangeException {
         LOGGER.info("Receiving {} ", floorRequestedWithDirectionPreference);
+
+        int toFloor = floorRequestedWithDirectionPreference.getToFloor();
+        FloorValidator.validate(toFloor, Range.closed(bottomFloor, topFloor));
+
         this.fsm.onUserWaitingRequest(floorRequestedWithDirectionPreference);
     }
 
@@ -217,5 +235,13 @@ public class ElevatorImpl implements Elevator {
 
     PriorityQueue<Integer> getDownwardsTargetFloors() {
         return downwardsTargetFloors;
+    }
+
+    public int getBottomFloor() {
+        return bottomFloor;
+    }
+
+    public int getTopFloor() {
+        return topFloor;
     }
 }

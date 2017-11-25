@@ -2,8 +2,10 @@ package com.tingco.codechallenge.elevator.resources;
 
 import com.tingco.codechallenge.elevator.api.ElevatorControllerService;
 import com.tingco.codechallenge.elevator.api.ElevatorImpl;
+import com.tingco.codechallenge.elevator.api.exceptions.OutOfFloorRangeException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,17 +41,28 @@ public final class ElevatorControllerEndPoints {
     }
 
     @GetMapping(value = "/demo/{to_floor}")
-    @ResponseStatus(value = HttpStatus.OK)
-    public void demoFloorRequestWithNumberPreference(@PathVariable("to_floor") int toFloor) {
-        this.elevatorControllerService.demoFloorRequestWithNumberPreference(toFloor);
+    public ResponseEntity<String> demoFloorRequestWithNumberPreference(@PathVariable("to_floor") int toFloor) {
+        try {
+            this.elevatorControllerService.demoFloorRequestWithNumberPreference(toFloor);
+        } catch (OutOfFloorRangeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping(value = "/demo/{waiting_floor}/{towards}")
     @ResponseStatus(value = HttpStatus.OK)
-    public void demoFloorRequestWithDirectionPreference(
+    public ResponseEntity<String> demoFloorRequestWithDirectionPreference(
         @PathVariable("waiting_floor") int waitingFloor,
         @PathVariable("towards") ElevatorImpl.Direction towards) {
-        this.elevatorControllerService.demoFloorRequestWithDirectionPreference(waitingFloor, towards);
+        try {
+            this.elevatorControllerService.demoFloorRequestWithDirectionPreference(waitingFloor, towards);
+        } catch (OutOfFloorRangeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
+        return ResponseEntity.ok().build();
     }
 
 }

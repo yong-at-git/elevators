@@ -1,8 +1,12 @@
 package com.tingco.codechallenge.elevator.api;
 
+import com.google.common.collect.Range;
 import com.google.common.eventbus.EventBus;
 import com.tingco.codechallenge.elevator.api.events.EventFactory;
+import com.tingco.codechallenge.elevator.api.exceptions.OutOfFloorRangeException;
+import com.tingco.codechallenge.elevator.api.utils.FloorValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,6 +26,12 @@ public class ElevatorControllerService implements ElevatorController {
     @Autowired
     ElevatorImpl demoElevator;
 
+    @Value("${com.tingco.elevator.floor.bottom}")
+    private int bottomFloor;
+
+    @Value("${com.tingco.elevator.floor.top}")
+    private int topFloor;
+
     private List<Elevator> elevators = new ArrayList<>();
     private Queue<Elevator> freeElevators = new LinkedBlockingDeque<>();
 
@@ -39,11 +49,15 @@ public class ElevatorControllerService implements ElevatorController {
         this.freeElevators.offer(elevator);
     }
 
-    public void demoFloorRequestWithNumberPreference(int toFloor) {
-        demoElevator.moveElevator(toFloor);
+    public void demoFloorRequestWithNumberPreference(int toFloor) throws OutOfFloorRangeException {
+        FloorValidator.validate(toFloor, Range.closed(bottomFloor, topFloor));
+
+        this.eventBus.post(EventFactory.createFloorRequested(toFloor));
     }
 
-    public void demoFloorRequestWithDirectionPreference(int waitingFloor, ElevatorImpl.Direction towards) {
+    public void demoFloorRequestWithDirectionPreference(int waitingFloor, ElevatorImpl.Direction towards) throws OutOfFloorRangeException {
+        FloorValidator.validate(waitingFloor, Range.closed(bottomFloor, topFloor));
+
         this.eventBus.post(EventFactory.createUserWaiting(waitingFloor, towards));
     }
 

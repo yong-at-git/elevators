@@ -470,9 +470,8 @@ class ElevatorFSM {
 
     private void throwIllegalStateTransitionException(Event event) {
         String exceptionMessage = "Event: " + event.getToken() + " should not happen under state: " + elevator.getCurrentState().getToken();
-
         LOGGER.fatal(exceptionMessage);
-        throw new IllegalStateTransitionException(exceptionMessage);
+        updateStatusOnEmergency();
     }
 
     Queue<EventToken> getEVENT_LOG() {
