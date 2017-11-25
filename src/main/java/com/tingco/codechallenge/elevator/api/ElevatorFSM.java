@@ -216,6 +216,7 @@ class ElevatorFSM {
                 "Floor requested at floor {} and with preferred direction: {}",
                 floorRequestedWithDirectionPreference.getWaitingFloor(),
                 preferredDirection);
+
             this.elevator.setDirection(preferredDirection);
             move(towards);
         }
@@ -305,16 +306,16 @@ class ElevatorFSM {
     private void move(Elevator.Direction requestedDirection) {
         switch (requestedDirection) {
             case UP:
+                startMotor();
                 LOGGER.info("Moving up upon requested direction: {}", requestedDirection);
 
-                this.isMotorRunning = true;
                 this.elevator.setCurrentState(StateFactory.createMovingUp());
                 doMovingUp();
                 break;
             case DOWN:
+                startMotor();
                 LOGGER.info("Moving down upon requested direction: {}", requestedDirection);
 
-                this.isMotorRunning = true;
                 this.elevator.setCurrentState(StateFactory.createMovingDown());
                 doMovingDown();
                 break;
@@ -359,6 +360,11 @@ class ElevatorFSM {
             LOGGER.info("Emergency happened.");
             elevator.eventBus.post(EventFactory.createEmergency());
         }
+    }
+
+    private void startMotor() {
+        this.isMotorRunning = true;
+        LOGGER.info("Starting motor.");
     }
 
     private void stopMotor() {
