@@ -4,7 +4,7 @@ import com.google.common.collect.Range;
 import com.google.common.eventbus.EventBus;
 import com.tingco.codechallenge.elevator.api.events.EventFactory;
 import com.tingco.codechallenge.elevator.api.exceptions.OutOfFloorRangeException;
-import com.tingco.codechallenge.elevator.api.utils.FloorValidator;
+import com.tingco.codechallenge.elevator.api.validators.FloorValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

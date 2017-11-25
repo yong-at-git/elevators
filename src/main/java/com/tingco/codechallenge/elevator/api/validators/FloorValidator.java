@@ -1,4 +1,4 @@
-package com.tingco.codechallenge.elevator.api.utils;
+package com.tingco.codechallenge.elevator.api.validators;
 
 import com.google.common.collect.Range;
 import com.tingco.codechallenge.elevator.api.exceptions.OutOfFloorRangeException;

@@ -21,7 +21,7 @@ import com.tingco.codechallenge.elevator.api.exceptions.OutOfFloorRangeException
 import com.tingco.codechallenge.elevator.api.states.ElevatorState;
 import com.tingco.codechallenge.elevator.api.states.ElevatorStateToken;
 import com.tingco.codechallenge.elevator.api.states.StateFactory;
-import com.tingco.codechallenge.elevator.api.utils.FloorValidator;
+import com.tingco.codechallenge.elevator.api.validators.FloorValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
