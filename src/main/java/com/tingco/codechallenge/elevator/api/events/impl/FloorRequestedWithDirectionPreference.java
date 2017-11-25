@@ -13,6 +13,13 @@ import java.util.Objects;
 public class FloorRequestedWithDirectionPreference extends FloorRequested {
     private int waitingFloor;
     private ElevatorImpl.Direction towards;
+    private int receiverElevatorId;
+
+    public FloorRequestedWithDirectionPreference(int receiverElevatorId, ElevatorImpl.Direction towards, int waitingFloor) {
+        this.waitingFloor = waitingFloor;
+        this.towards = towards;
+        this.receiverElevatorId = receiverElevatorId;
+    }
 
     public FloorRequestedWithDirectionPreference(int waitingFloor, ElevatorImpl.Direction towards) {
         Objects.requireNonNull(towards);
@@ -61,5 +68,9 @@ public class FloorRequestedWithDirectionPreference extends FloorRequested {
 
     @Override public int getToFloor() {
         return waitingFloor;
+    }
+
+    @Override public int getReceiverElevatorId() {
+        return receiverElevatorId;
     }
 }

@@ -22,51 +22,51 @@ public class EventFactory {
         // no-arg constructor for factory
     }
 
-    public static final ArriveFloor createArriveFloor(int floor) {
-        return new ArriveFloor(floor);
+    public static final ArriveFloor createArriveFloor(int receiverElevatorId, int floor) {
+        return new ArriveFloor(receiverElevatorId, floor);
     }
 
-    public static final BackToService createBackToService() {
-        return new BackToService();
+    public static final BackToService createBackToService(int receiverElevatorId) {
+        return new BackToService(receiverElevatorId);
     }
 
-    public static final CloseDoor createCloseDoor() {
-        return new CloseDoor();
+    public static final CloseDoor createCloseDoor(int receiverElevatorId) {
+        return new CloseDoor(receiverElevatorId);
     }
 
-    public static final DoorClosed createDoorClosed() {
-        return new DoorClosed();
+    public static final DoorClosed createDoorClosed(int receiverElevatorId) {
+        return new DoorClosed(receiverElevatorId);
     }
 
-    public static final DoorFailure createDoorFailure() {
-        return new DoorFailure();
+    public static final DoorFailure createDoorFailure(int receiverElevatorId) {
+        return new DoorFailure(receiverElevatorId);
     }
 
-    public static final OpenDoor createOpenDoor() {
-        return new OpenDoor();
+    public static final OpenDoor createOpenDoor(int receiverElevatorId) {
+        return new OpenDoor(receiverElevatorId);
     }
 
-    public static final DoorOpened createDoorOpened() {
-        return new DoorOpened();
+    public static final DoorOpened createDoorOpened(int receiverElevatorId) {
+        return new DoorOpened(receiverElevatorId);
     }
 
-    public static final Emergency createEmergency() {
-        return new Emergency();
+    public static final Emergency createEmergency(int receiverElevatorId) {
+        return new Emergency(receiverElevatorId);
     }
 
-    public static final FloorRequestedWithNumberPreference createFloorRequested(int toFloor) {
+    public static final FloorRequestedWithNumberPreference createFloorRequested(int receiverElevatorId, int toFloor) {
         return new FloorRequestedWithNumberPreference(toFloor);
     }
 
-    public static final Maintain createMaintain() {
-        return new Maintain();
+    public static final Maintain createMaintain(int receiverElevatorId) {
+        return new Maintain(receiverElevatorId);
     }
 
-    public static final PowerOff createPowerOff() {
-        return new PowerOff();
+    public static final PowerOff createPowerOff(int receiverElevatorId) {
+        return new PowerOff(receiverElevatorId);
     }
 
-    public static final FloorRequestedWithDirectionPreference createUserWaiting(int atFloor, ElevatorImpl.Direction towards) {
-        return new FloorRequestedWithDirectionPreference(atFloor, towards);
+    public static final FloorRequestedWithDirectionPreference createUserWaiting(int receiverElevatorId, ElevatorImpl.Direction towards, int atFloor) {
+        return new FloorRequestedWithDirectionPreference(receiverElevatorId, towards, atFloor);
     }
 }

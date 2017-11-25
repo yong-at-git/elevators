@@ -19,7 +19,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  * Created by Yong Huang on 2017-11-20.
  */
 @Service
-public class ElevatorControllerService implements ElevatorController {
+public class ElevatorControllerImpl implements ElevatorController {
 
     @Autowired
     EventBus eventBus;
@@ -50,16 +50,29 @@ public class ElevatorControllerService implements ElevatorController {
     @Value("${com.tingco.elevator.waiting.duration.after.notifying.arriving.in.ms}")
     private int waitingDurationAfterNotifyingArrivingInMs;
 
+    @Value("${com.tingco.elevator.numberofelevators}")
+    private int numberOfElevators;
+
     private List<Elevator> elevators = new ArrayList<>();
     private Queue<Elevator> freeElevators = new LinkedBlockingDeque<>();
 
     @PostConstruct
     void init() {
-        elevator = new ElevatorImpl(this.eventBus, 1, createElevatorConfiguration());
-        this.eventBus.register(elevator);
+        for (int id = 1; id <= numberOfElevators; id++) {
+            elevator = new ElevatorImpl(this.eventBus, id, createElevatorConfiguration());
+            elevators.add(elevator);
+            freeElevators.offer(elevator);
+            this.eventBus.register(elevator);
+        }
     }
 
     @Override public Elevator requestElevator(int toFloor) {
+        if (!this.freeElevators.isEmpty()) {
+            Elevator freeElevator = this.freeElevators.poll();
+            // TODO: post event to the allocated elevator
+            return freeElevator;
+        }
+
         // TODO: design the algorithms here
 
         return this.freeElevators.poll();
@@ -76,13 +89,17 @@ public class ElevatorControllerService implements ElevatorController {
     public void createFloorRequestWithNumberPreference(int toFloor) throws OutOfFloorRangeException {
         FloorValidator.validate(toFloor, Range.closed(bottomFloor, topFloor));
 
-        this.eventBus.post(EventFactory.createFloorRequested(toFloor));
+        Elevator allocated = requestElevator(toFloor);
+
+        this.eventBus.post(EventFactory.createFloorRequested(allocated.getId(), toFloor));
     }
 
     public void createFloorRequestWithDirectionPreference(int waitingFloor, ElevatorImpl.Direction towards) throws OutOfFloorRangeException {
         FloorValidator.validate(waitingFloor, Range.closed(bottomFloor, topFloor));
 
-        this.eventBus.post(EventFactory.createUserWaiting(waitingFloor, towards));
+        Elevator allocated = requestElevator(waitingFloor);
+
+        this.eventBus.post(EventFactory.createUserWaiting(allocated.getId(), towards, waitingFloor));
     }
 
     public int requestElevatorId(int toFloor) {

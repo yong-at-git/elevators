@@ -9,10 +9,12 @@ import com.tingco.codechallenge.elevator.api.events.EventToken;
  * Created by Yong Huang on 2017-11-21.
  */
 public class ArriveFloor implements Event {
-    int atFloor;
+    private int atFloor;
+    private int receiverElevatorId;
 
-    public ArriveFloor(int atFloor) {
+    public ArriveFloor(int receiverElevatorId, int atFloor) {
         this.atFloor = atFloor;
+        this.receiverElevatorId = receiverElevatorId;
     }
 
     public int getAtFloor() {
@@ -42,5 +44,9 @@ public class ArriveFloor implements Event {
 
     @Override public EventToken getToken() {
         return EventToken.ARRIVE;
+    }
+
+    @Override public int getReceiverElevatorId() {
+        return receiverElevatorId;
     }
 }

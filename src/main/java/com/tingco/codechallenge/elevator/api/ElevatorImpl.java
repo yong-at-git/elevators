@@ -80,7 +80,7 @@ public class ElevatorImpl implements Elevator {
     }
 
     @Override public void moveElevator(int toFloor) {
-        this.eventBus.post(EventFactory.createFloorRequested(toFloor));
+        this.eventBus.post(EventFactory.createFloorRequested(this.getId(), toFloor));
     }
 
     @Override public boolean isBusy() {
@@ -131,76 +131,100 @@ public class ElevatorImpl implements Elevator {
 
     @Subscribe
     public void onArrive(ArriveFloor arriveFloor) {
-        this.fsm.onArrive(arriveFloor);
+        if (arriveFloor.getReceiverElevatorId() == this.getId()) {
+            this.fsm.onArrive(arriveFloor);
+        }
     }
 
     @Subscribe
     public void onBackToService(BackToService backToService) {
-        this.fsm.onBackToService(backToService);
+
+        if (backToService.getReceiverElevatorId() == this.getId()) {
+            this.fsm.onBackToService(backToService);
+        }
     }
 
     @Subscribe
     public void onCloseDoor(CloseDoor closeDoor) {
-        this.fsm.onCloseDoor(closeDoor);
+        if (closeDoor.getReceiverElevatorId() == this.getId()) {
+            this.fsm.onCloseDoor(closeDoor);
+        }
     }
 
     @Subscribe
     public void onDoorClosed(DoorClosed doorClosed) {
-        this.fsm.onDoorClosed(doorClosed);
+        if (doorClosed.getReceiverElevatorId() == this.getId()) {
+            this.fsm.onDoorClosed(doorClosed);
+        }
     }
 
     @Subscribe
     public void onDoorFailure(DoorFailure doorFailure) {
-        this.fsm.onDoorFailure(doorFailure);
+        if (doorFailure.getReceiverElevatorId() == this.getId()) {
+            this.fsm.onDoorFailure(doorFailure);
+        }
     }
 
     @Subscribe
     public void onOpenDoor(OpenDoor openDoor) {
-        this.fsm.onOpenDoor(openDoor);
-
+        if (openDoor.getReceiverElevatorId() == this.getId()) {
+            this.fsm.onOpenDoor(openDoor);
+        }
     }
 
     @Subscribe
     public void onDoorOpened(DoorOpened doorOpened) {
-        this.fsm.onDoorOpened(doorOpened);
+        if (doorOpened.getReceiverElevatorId() == this.getId()) {
+            this.fsm.onDoorOpened(doorOpened);
+        }
     }
 
     @Subscribe
     public void onEmergency(Emergency emergencyEvent) {
-        LOGGER.info("Receiving {} ", emergencyEvent);
-        this.fsm.onEmergency();
+        if (emergencyEvent.getReceiverElevatorId() == this.getId()) {
+            LOGGER.info("Receiving {} ", emergencyEvent);
+            this.fsm.onEmergency();
+        }
     }
 
     @Subscribe
     private void onFloorRequested(FloorRequestedWithNumberPreference floorRequestedWithNumberPreference) throws OutOfFloorRangeException {
-        LOGGER.info("Receiving {} ", floorRequestedWithNumberPreference);
+        if (floorRequestedWithNumberPreference.getReceiverElevatorId() == this.getId()) {
+            LOGGER.info("Receiving {} ", floorRequestedWithNumberPreference);
 
-        int toFloor = floorRequestedWithNumberPreference.getToFloor();
-        FloorValidator.validate(toFloor, Range.closed(this.configuration.getBottomFloor(), this.configuration.getTopFloor()));
+            int toFloor = floorRequestedWithNumberPreference.getToFloor();
+            FloorValidator.validate(toFloor, Range.closed(this.configuration.getBottomFloor(), this.configuration.getTopFloor()));
 
-        this.fsm.onFloorRequested(floorRequestedWithNumberPreference);
+            this.fsm.onFloorRequested(floorRequestedWithNumberPreference);
+        }
     }
 
     @Subscribe
     private void onMaintain(Maintain maintain) {
-        LOGGER.info("Receiving {}", maintain);
-        this.fsm.onMaintain(maintain);
+        if (maintain.getReceiverElevatorId() == this.getId()) {
+            LOGGER.info("Receiving {}", maintain);
+            this.fsm.onMaintain(maintain);
+        }
     }
 
     @Subscribe
     public void onPowerOff(PowerOff powerOff) {
-        LOGGER.info("Receiving {} ", powerOff);
-        this.fsm.onPowerOff(powerOff);
+        if (powerOff.getReceiverElevatorId() == this.getId()) {
+            LOGGER.info("Receiving {} ", powerOff);
+            this.fsm.onPowerOff(powerOff);
+        }
     }
 
     @Subscribe
     public void onUserWaitingRequest(FloorRequestedWithDirectionPreference floorRequestedWithDirectionPreference) throws OutOfFloorRangeException {
-        LOGGER.info("Receiving {} ", floorRequestedWithDirectionPreference);
+        if (floorRequestedWithDirectionPreference.getReceiverElevatorId() == this.getId()) {
+            LOGGER.info("Receiving {} ", floorRequestedWithDirectionPreference);
 
-        int toFloor = floorRequestedWithDirectionPreference.getToFloor();
-        FloorValidator.validate(toFloor, Range.closed(this.configuration.getBottomFloor(), this.configuration.getTopFloor()));
+            int toFloor = floorRequestedWithDirectionPreference.getToFloor();
+            FloorValidator.validate(toFloor, Range.closed(this.configuration.getBottomFloor(), this.configuration.getTopFloor()));
 
-        this.fsm.onUserWaitingRequest(floorRequestedWithDirectionPreference);
+            this.fsm.onUserWaitingRequest(floorRequestedWithDirectionPreference);
+        }
     }
 
     EventBus getEventBus() {

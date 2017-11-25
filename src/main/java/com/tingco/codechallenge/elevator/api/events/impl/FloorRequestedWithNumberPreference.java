@@ -9,6 +9,12 @@ import com.tingco.codechallenge.elevator.api.events.EventToken;
  */
 public class FloorRequestedWithNumberPreference extends FloorRequested {
     private int toFloor;
+    private int receiverElevatorId;
+
+    public FloorRequestedWithNumberPreference(int receiverElevatorId, int toFloor) {
+        this.toFloor = toFloor;
+        this.receiverElevatorId = receiverElevatorId;
+    }
 
     public FloorRequestedWithNumberPreference(int toFloor) {
         this.toFloor = toFloor;
@@ -42,5 +48,9 @@ public class FloorRequestedWithNumberPreference extends FloorRequested {
 
     @Override public EventToken getToken() {
         return EventToken.FLOOR_REQUESTED;
+    }
+
+    @Override public int getReceiverElevatorId() {
+        return receiverElevatorId;
     }
 }

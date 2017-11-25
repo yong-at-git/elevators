@@ -189,10 +189,10 @@ class ElevatorFSM {
             Thread.sleep(this.elevator.getConfiguration().getDoorClosingDurationInMs());
         } catch (InterruptedException e) {
             LOGGER.info("Emergency happened.");
-            elevator.getEventBus().post(EventFactory.createEmergency());
+            elevator.getEventBus().post(EventFactory.createEmergency(this.elevator.getId()));
         }
 
-        this.elevator.getEventBus().post(EventFactory.createDoorClosed());
+        this.elevator.getEventBus().post(EventFactory.createDoorClosed(this.elevator.getId()));
     }
 
     private void updateStatusOnFloorRequested(FloorRequestedWithNumberPreference floorRequestedWithNumberPreference) {
@@ -334,14 +334,14 @@ class ElevatorFSM {
 
                 int currentFloor = this.elevator.currentFloor();
                 int arrivingFloor = currentFloor + 1;
-                this.elevator.getEventBus().post(EventFactory.createArriveFloor(arrivingFloor));
+                this.elevator.getEventBus().post(EventFactory.createArriveFloor(this.elevator.getId(), arrivingFloor));
 
                 Thread.sleep(this.elevator.getConfiguration().getWaitingDurationAfterNotifyingArrivingInMs());
             }
         } catch (InterruptedException e) {
             stopMotor();
             LOGGER.info("Emergency happened.");
-            elevator.getEventBus().post(EventFactory.createEmergency());
+            elevator.getEventBus().post(EventFactory.createEmergency(this.elevator.getId()));
         }
     }
 
@@ -354,7 +354,7 @@ class ElevatorFSM {
 
                 int currentFloor = this.elevator.currentFloor();
                 int arrivingFloor = currentFloor - 1;
-                this.elevator.getEventBus().post(EventFactory.createArriveFloor(arrivingFloor));
+                this.elevator.getEventBus().post(EventFactory.createArriveFloor(this.elevator.getId(), arrivingFloor));
 
                 Thread.sleep(this.elevator.getConfiguration().getWaitingDurationAfterNotifyingArrivingInMs());
             }
@@ -362,7 +362,7 @@ class ElevatorFSM {
         } catch (InterruptedException e) {
             stopMotor();
             LOGGER.info("Emergency happened.");
-            elevator.getEventBus().post(EventFactory.createEmergency());
+            elevator.getEventBus().post(EventFactory.createEmergency(this.elevator.getId()));
         }
     }
 
@@ -406,7 +406,7 @@ class ElevatorFSM {
                 this.elevator.getDownwardsTargetFloors().poll();
             }
         }
-        this.elevator.getEventBus().post(EventFactory.createOpenDoor());
+        this.elevator.getEventBus().post(EventFactory.createOpenDoor(this.elevator.getId()));
     }
 
     private boolean isFloorAlreadyRequested(int arrivedFloor) {
@@ -422,10 +422,10 @@ class ElevatorFSM {
             Thread.sleep(this.elevator.getConfiguration().getDoorOpeningDurationInMs());
         } catch (InterruptedException e) {
             LOGGER.info("Emergency happened.");
-            elevator.getEventBus().post(EventFactory.createEmergency());
+            elevator.getEventBus().post(EventFactory.createEmergency(this.elevator.getId()));
         }
 
-        this.elevator.getEventBus().post(EventFactory.createDoorOpened());
+        this.elevator.getEventBus().post(EventFactory.createDoorOpened(this.elevator.getId()));
     }
 
     private void updateStatusOnDoorFailure() {
@@ -440,10 +440,10 @@ class ElevatorFSM {
             Thread.sleep(this.elevator.getConfiguration().getDoorOpenedWaitingDurationInMs());
         } catch (InterruptedException e) {
             LOGGER.info("Emergency happened.");
-            elevator.getEventBus().post(EventFactory.createEmergency());
+            elevator.getEventBus().post(EventFactory.createEmergency(this.elevator.getId()));
         }
 
-        this.elevator.getEventBus().post(EventFactory.createCloseDoor());
+        this.elevator.getEventBus().post(EventFactory.createCloseDoor(this.elevator.getId()));
     }
 
     private void updateStatusOnDoorClosed() {

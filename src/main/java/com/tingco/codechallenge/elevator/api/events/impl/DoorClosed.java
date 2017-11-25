@@ -7,7 +7,17 @@ import com.tingco.codechallenge.elevator.api.events.EventToken;
  * Created by Yong Huang on 2017-11-23.
  */
 public class DoorClosed implements Event {
+    private int receiverElevatorId;
+
+    public DoorClosed(int receiverElevatorId) {
+        this.receiverElevatorId = receiverElevatorId;
+    }
+
     @Override public EventToken getToken() {
         return EventToken.DOOR_CLOSED;
+    }
+
+    @Override public int getReceiverElevatorId() {
+        return receiverElevatorId;
     }
 }

@@ -1,6 +1,6 @@
 package com.tingco.codechallenge.elevator.resources;
 
-import com.tingco.codechallenge.elevator.api.ElevatorControllerService;
+import com.tingco.codechallenge.elevator.api.ElevatorControllerImpl;
 import com.tingco.codechallenge.elevator.api.ElevatorImpl;
 import com.tingco.codechallenge.elevator.api.RideRequest;
 import com.tingco.codechallenge.elevator.api.exceptions.OutOfFloorRangeException;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/rest/v1")
 public final class ElevatorControllerEndPoints {
-    @Autowired ElevatorControllerService elevatorControllerService;
+    @Autowired ElevatorControllerImpl elevatorControllerImpl;
 
     /**
      * Ping service to test if we are alive.
@@ -39,9 +39,9 @@ public final class ElevatorControllerEndPoints {
         try {
             if (rideRequest.getTowards() != ElevatorImpl.Direction.NONE) {
                 ElevatorImpl.Direction towards = rideRequest.getTowards();
-                this.elevatorControllerService.createFloorRequestWithDirectionPreference(toFloor, towards);
+                this.elevatorControllerImpl.createFloorRequestWithDirectionPreference(toFloor, towards);
             } else {
-                this.elevatorControllerService.createFloorRequestWithNumberPreference(toFloor);
+                this.elevatorControllerImpl.createFloorRequestWithNumberPreference(toFloor);
             }
         } catch (OutOfFloorRangeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
