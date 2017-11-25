@@ -48,6 +48,24 @@ public class ElevatorImpl implements Elevator {
     @Value("${com.tingco.elevator.floor.top}")
     private int topFloor;
 
+    @Value("${com.tingco.elevator.door.opening.duration.in.ms}")
+    private int doorOpeningDurationInMs;
+
+    @Value("${com.tingco.elevator.door.opened.waiting.duration.in.ms}")
+    private int doorOpenedWaitingDurationInMs;
+
+    @Value("${com.tingco.elevator.door.closing.duration.in.ms}")
+    private int doorClosingDurationInMs;
+
+    @Value("${com.tingco.elevator.door.closed.waiting.duration.in.ms}")
+    private int doorClosedWaitingDurationInMs;
+
+    @Value("${com.tingco.elevator.move.duration.between.floors.in.ms}")
+    private int movingDurationBetweenFloorsInMs;
+
+    @Value("${com.tingco.elevator.waiting.duration.after.notifying.arriving.in.ms}")
+    private int waitingDurationAfterNotifyingArrivingInMs;
+
     private volatile Direction direction = Direction.NONE;
     private ElevatorFSM fsm = new ElevatorFSM(this);
     private volatile ElevatorState currentState = StateFactory.createIdle();
@@ -237,11 +255,27 @@ public class ElevatorImpl implements Elevator {
         return downwardsTargetFloors;
     }
 
-    public int getBottomFloor() {
-        return bottomFloor;
+    int getDoorOpeningDurationInMs() {
+        return doorOpeningDurationInMs;
     }
 
-    public int getTopFloor() {
-        return topFloor;
+    int getDoorOpenedWaitingDurationInMs() {
+        return doorOpenedWaitingDurationInMs;
+    }
+
+    int getDoorClosingDurationInMs() {
+        return doorClosingDurationInMs;
+    }
+
+    int getDoorClosedWaitingDurationInMs() {
+        return doorClosedWaitingDurationInMs;
+    }
+
+    int getMovingDurationBetweenFloorsInMs() {
+        return movingDurationBetweenFloorsInMs;
+    }
+
+    int getWaitingDurationAfterNotifyingArrivingInMs() {
+        return waitingDurationAfterNotifyingArrivingInMs;
     }
 }

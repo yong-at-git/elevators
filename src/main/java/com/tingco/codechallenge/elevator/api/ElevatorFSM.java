@@ -186,7 +186,7 @@ class ElevatorFSM {
 
         try {
             LOGGER.info("Closing door.");
-            Thread.sleep(1 * 1000);
+            Thread.sleep(this.elevator.getDoorClosingDurationInMs());
         } catch (InterruptedException e) {
             LOGGER.info("Emergency happened.");
             elevator.eventBus.post(EventFactory.createEmergency());
@@ -330,11 +330,13 @@ class ElevatorFSM {
 
         try {
             while (isMotorRunning) {
-                Thread.sleep(1 * 1000);
+                Thread.sleep(this.elevator.getMovingDurationBetweenFloorsInMs());
+
                 int currentFloor = this.elevator.currentFloor();
                 int arrivingFloor = currentFloor + 1;
                 this.elevator.getEventBus().post(EventFactory.createArriveFloor(arrivingFloor));
-                Thread.sleep(500);
+
+                Thread.sleep(this.elevator.getWaitingDurationAfterNotifyingArrivingInMs());
             }
         } catch (InterruptedException e) {
             stopMotor();
@@ -348,11 +350,13 @@ class ElevatorFSM {
 
         try {
             while (isMotorRunning) {
-                Thread.sleep(1 * 1000);
+                Thread.sleep(this.elevator.getMovingDurationBetweenFloorsInMs());
+
                 int currentFloor = this.elevator.currentFloor();
                 int arrivingFloor = currentFloor - 1;
                 this.elevator.getEventBus().post(EventFactory.createArriveFloor(arrivingFloor));
-                Thread.sleep(500);
+
+                Thread.sleep(this.elevator.getWaitingDurationAfterNotifyingArrivingInMs());
             }
 
         } catch (InterruptedException e) {
@@ -415,7 +419,7 @@ class ElevatorFSM {
 
         try {
             LOGGER.info("Opening door.");
-            Thread.sleep(1 * 1000);
+            Thread.sleep(this.elevator.getDoorOpeningDurationInMs());
         } catch (InterruptedException e) {
             LOGGER.info("Emergency happened.");
             elevator.eventBus.post(EventFactory.createEmergency());
@@ -433,7 +437,7 @@ class ElevatorFSM {
 
         try {
             LOGGER.info("Door opened. Waiting for user to get off and on.");
-            Thread.sleep(500);
+            Thread.sleep(this.elevator.getDoorOpenedWaitingDurationInMs());
         } catch (InterruptedException e) {
             LOGGER.info("Emergency happened.");
             elevator.eventBus.post(EventFactory.createEmergency());
