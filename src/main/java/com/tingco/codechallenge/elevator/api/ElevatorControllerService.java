@@ -49,13 +49,13 @@ public class ElevatorControllerService implements ElevatorController {
         this.freeElevators.offer(elevator);
     }
 
-    public void demoFloorRequestWithNumberPreference(int toFloor) throws OutOfFloorRangeException {
+    public void createFloorRequestWithNumberPreference(int toFloor) throws OutOfFloorRangeException {
         FloorValidator.validate(toFloor, Range.closed(bottomFloor, topFloor));
 
         this.eventBus.post(EventFactory.createFloorRequested(toFloor));
     }
 
-    public void demoFloorRequestWithDirectionPreference(int waitingFloor, ElevatorImpl.Direction towards) throws OutOfFloorRangeException {
+    public void createFloorRequestWithDirectionPreference(int waitingFloor, ElevatorImpl.Direction towards) throws OutOfFloorRangeException {
         FloorValidator.validate(waitingFloor, Range.closed(bottomFloor, topFloor));
 
         this.eventBus.post(EventFactory.createUserWaiting(waitingFloor, towards));
