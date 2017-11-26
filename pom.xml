@@ -22,10 +22,14 @@
         <spring.boot.version>1.4.3.RELEASE</spring.boot.version>
         <awaitility.version>1.7.0</awaitility.version>
         <guava.version>21.0</guava.version>
+        <maven.version>3.3.4</maven.version>
+        <maven.compiler.plugin.version>3.6.1</maven.compiler.plugin.version>
+        <maven.compiler.plugin.source.version>1.8</maven.compiler.plugin.source.version>
+        <maven.compiler.plugin.target.version>1.8</maven.compiler.plugin.target.version>
     </properties>
 
     <prerequisites>
-        <maven>3.3.4</maven>
+        <maven>${maven.version}</maven>
     </prerequisites>
 
 	<build>
@@ -37,10 +41,10 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.6.1</version>
+				<version>${maven.compiler.plugin.version}</version>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+					<source>${maven.compiler.plugin.source.version}</source>
+					<target>${maven.compiler.plugin.target.version}</target>
 				</configuration>
 			</plugin>
 		</plugins>
