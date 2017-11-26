@@ -13,6 +13,7 @@ import com.tingco.codechallenge.elevator.api.events.impl.DoorOpened;
 import com.tingco.codechallenge.elevator.api.events.impl.Emergency;
 import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithDirectionPreference;
 import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithNumberPreference;
+import com.tingco.codechallenge.elevator.api.events.impl.Idle;
 import com.tingco.codechallenge.elevator.api.events.impl.Maintain;
 import com.tingco.codechallenge.elevator.api.events.impl.OpenDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
@@ -131,7 +132,7 @@ public class ElevatorImpl implements Elevator {
 
     @Subscribe
     public void onArrive(ArriveFloor arriveFloor) {
-        if (arriveFloor.getReceiverElevatorId() == this.getId()) {
+        if (arriveFloor.getElevatorId() == this.getId()) {
             this.fsm.onArrive(arriveFloor);
         }
     }
@@ -139,49 +140,56 @@ public class ElevatorImpl implements Elevator {
     @Subscribe
     public void onBackToService(BackToService backToService) {
 
-        if (backToService.getReceiverElevatorId() == this.getId()) {
+        if (backToService.getElevatorId() == this.getId()) {
             this.fsm.onBackToService(backToService);
         }
     }
 
     @Subscribe
     public void onCloseDoor(CloseDoor closeDoor) {
-        if (closeDoor.getReceiverElevatorId() == this.getId()) {
+        if (closeDoor.getElevatorId() == this.getId()) {
             this.fsm.onCloseDoor(closeDoor);
         }
     }
 
     @Subscribe
     public void onDoorClosed(DoorClosed doorClosed) {
-        if (doorClosed.getReceiverElevatorId() == this.getId()) {
+        if (doorClosed.getElevatorId() == this.getId()) {
             this.fsm.onDoorClosed(doorClosed);
         }
     }
 
     @Subscribe
     public void onDoorFailure(DoorFailure doorFailure) {
-        if (doorFailure.getReceiverElevatorId() == this.getId()) {
+        if (doorFailure.getElevatorId() == this.getId()) {
             this.fsm.onDoorFailure(doorFailure);
         }
     }
 
     @Subscribe
+    public void onIdle(Idle idle) {
+        if (idle.getElevatorId() == this.getId()) {
+            this.fsm.onIdle(idle);
+        }
+    }
+
+    @Subscribe
     public void onOpenDoor(OpenDoor openDoor) {
-        if (openDoor.getReceiverElevatorId() == this.getId()) {
+        if (openDoor.getElevatorId() == this.getId()) {
             this.fsm.onOpenDoor(openDoor);
         }
     }
 
     @Subscribe
     public void onDoorOpened(DoorOpened doorOpened) {
-        if (doorOpened.getReceiverElevatorId() == this.getId()) {
+        if (doorOpened.getElevatorId() == this.getId()) {
             this.fsm.onDoorOpened(doorOpened);
         }
     }
 
     @Subscribe
     public void onEmergency(Emergency emergencyEvent) {
-        if (emergencyEvent.getReceiverElevatorId() == this.getId()) {
+        if (emergencyEvent.getElevatorId() == this.getId()) {
             LOGGER.info("Receiving {} ", emergencyEvent);
             this.fsm.onEmergency();
         }
@@ -189,7 +197,7 @@ public class ElevatorImpl implements Elevator {
 
     @Subscribe
     private void onFloorRequested(FloorRequestedWithNumberPreference floorRequestedWithNumberPreference) throws OutOfFloorRangeException {
-        if (floorRequestedWithNumberPreference.getReceiverElevatorId() == this.getId()) {
+        if (floorRequestedWithNumberPreference.getElevatorId() == this.getId()) {
             LOGGER.info("Receiving {} ", floorRequestedWithNumberPreference);
 
             int toFloor = floorRequestedWithNumberPreference.getToFloor();
@@ -201,7 +209,7 @@ public class ElevatorImpl implements Elevator {
 
     @Subscribe
     private void onMaintain(Maintain maintain) {
-        if (maintain.getReceiverElevatorId() == this.getId()) {
+        if (maintain.getElevatorId() == this.getId()) {
             LOGGER.info("Receiving {}", maintain);
             this.fsm.onMaintain(maintain);
         }
@@ -209,7 +217,7 @@ public class ElevatorImpl implements Elevator {
 
     @Subscribe
     public void onPowerOff(PowerOff powerOff) {
-        if (powerOff.getReceiverElevatorId() == this.getId()) {
+        if (powerOff.getElevatorId() == this.getId()) {
             LOGGER.info("Receiving {} ", powerOff);
             this.fsm.onPowerOff(powerOff);
         }
@@ -217,7 +225,7 @@ public class ElevatorImpl implements Elevator {
 
     @Subscribe
     public void onUserWaitingRequest(FloorRequestedWithDirectionPreference floorRequestedWithDirectionPreference) throws OutOfFloorRangeException {
-        if (floorRequestedWithDirectionPreference.getReceiverElevatorId() == this.getId()) {
+        if (floorRequestedWithDirectionPreference.getElevatorId() == this.getId()) {
             LOGGER.info("Receiving {} ", floorRequestedWithDirectionPreference);
 
             int toFloor = floorRequestedWithDirectionPreference.getToFloor();

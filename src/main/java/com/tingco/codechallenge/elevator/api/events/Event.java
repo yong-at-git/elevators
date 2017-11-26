@@ -6,5 +6,5 @@ package com.tingco.codechallenge.elevator.api.events;
 public interface Event {
     EventToken getToken();
 
-    int getReceiverElevatorId();
+    int getElevatorId();
 }

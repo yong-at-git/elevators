@@ -17,7 +17,7 @@ public class CloseDoor implements Event {
         return EventToken.CLOSE_DOOR;
     }
 
-    @Override public int getReceiverElevatorId() {
+    @Override public int getElevatorId() {
         return receiverElevatorId;
     }
 }

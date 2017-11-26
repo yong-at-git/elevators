@@ -50,7 +50,7 @@ public class FloorRequestedWithNumberPreference extends FloorRequested {
         return EventToken.FLOOR_REQUESTED;
     }
 
-    @Override public int getReceiverElevatorId() {
+    @Override public int getElevatorId() {
         return receiverElevatorId;
     }
 }

@@ -17,7 +17,7 @@ public class Maintain implements Event {
         return EventToken.MAINTAIN;
     }
 
-    @Override public int getReceiverElevatorId() {
+    @Override public int getElevatorId() {
         return receiverElevatorId;
     }
 }

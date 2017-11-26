@@ -17,7 +17,7 @@ public class DoorFailure implements Event {
         return EventToken.DOOR_FAILURE;
     }
 
-    @Override public int getReceiverElevatorId() {
+    @Override public int getElevatorId() {
         return receiverElevatorId;
     }
 }

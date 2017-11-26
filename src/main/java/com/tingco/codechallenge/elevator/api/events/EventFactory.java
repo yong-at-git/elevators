@@ -10,7 +10,9 @@ import com.tingco.codechallenge.elevator.api.events.impl.DoorOpened;
 import com.tingco.codechallenge.elevator.api.events.impl.Emergency;
 import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithDirectionPreference;
 import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithNumberPreference;
+import com.tingco.codechallenge.elevator.api.events.impl.Idle;
 import com.tingco.codechallenge.elevator.api.events.impl.Maintain;
+import com.tingco.codechallenge.elevator.api.events.impl.NewlyFree;
 import com.tingco.codechallenge.elevator.api.events.impl.OpenDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
 
@@ -22,51 +24,59 @@ public class EventFactory {
         // no-arg constructor for factory
     }
 
-    public static final ArriveFloor createArriveFloor(int receiverElevatorId, int floor) {
-        return new ArriveFloor(receiverElevatorId, floor);
+    public static final ArriveFloor createArriveFloor(int elevatorId, int floor) {
+        return new ArriveFloor(elevatorId, floor);
     }
 
-    public static final BackToService createBackToService(int receiverElevatorId) {
-        return new BackToService(receiverElevatorId);
+    public static final BackToService createBackToService(int elevatorId) {
+        return new BackToService(elevatorId);
     }
 
-    public static final CloseDoor createCloseDoor(int receiverElevatorId) {
-        return new CloseDoor(receiverElevatorId);
+    public static final CloseDoor createCloseDoor(int elevatorId) {
+        return new CloseDoor(elevatorId);
     }
 
-    public static final DoorClosed createDoorClosed(int receiverElevatorId) {
-        return new DoorClosed(receiverElevatorId);
+    public static final DoorClosed createDoorClosed(int elevatorId) {
+        return new DoorClosed(elevatorId);
     }
 
-    public static final DoorFailure createDoorFailure(int receiverElevatorId) {
-        return new DoorFailure(receiverElevatorId);
+    public static final DoorFailure createDoorFailure(int elevatorId) {
+        return new DoorFailure(elevatorId);
     }
 
-    public static final OpenDoor createOpenDoor(int receiverElevatorId) {
-        return new OpenDoor(receiverElevatorId);
+    public static final OpenDoor createOpenDoor(int elevatorId) {
+        return new OpenDoor(elevatorId);
     }
 
-    public static final DoorOpened createDoorOpened(int receiverElevatorId) {
-        return new DoorOpened(receiverElevatorId);
+    public static final DoorOpened createDoorOpened(int elevatorId) {
+        return new DoorOpened(elevatorId);
     }
 
-    public static final Emergency createEmergency(int receiverElevatorId) {
-        return new Emergency(receiverElevatorId);
+    public static final Emergency createEmergency(int elevatorId) {
+        return new Emergency(elevatorId);
     }
 
-    public static final FloorRequestedWithNumberPreference createFloorRequested(int receiverElevatorId, int toFloor) {
+    public static final FloorRequestedWithNumberPreference createFloorRequested(int elevatorId, int toFloor) {
         return new FloorRequestedWithNumberPreference(toFloor);
     }
 
-    public static final Maintain createMaintain(int receiverElevatorId) {
-        return new Maintain(receiverElevatorId);
+    public static final Idle createIdle(int elevatorId) {
+        return new Idle(elevatorId);
     }
 
-    public static final PowerOff createPowerOff(int receiverElevatorId) {
-        return new PowerOff(receiverElevatorId);
+    public static final Maintain createMaintain(int elevatorId) {
+        return new Maintain(elevatorId);
     }
 
-    public static final FloorRequestedWithDirectionPreference createUserWaiting(int receiverElevatorId, ElevatorImpl.Direction towards, int atFloor) {
-        return new FloorRequestedWithDirectionPreference(receiverElevatorId, towards, atFloor);
+    public static final NewlyFree createNewlyFree(int elevatorId) {
+        return new NewlyFree(elevatorId);
+    }
+
+    public static final PowerOff createPowerOff(int elevatorId) {
+        return new PowerOff(elevatorId);
+    }
+
+    public static final FloorRequestedWithDirectionPreference createUserWaiting(int elevatorId, ElevatorImpl.Direction towards, int atFloor) {
+        return new FloorRequestedWithDirectionPreference(elevatorId, towards, atFloor);
     }
 }

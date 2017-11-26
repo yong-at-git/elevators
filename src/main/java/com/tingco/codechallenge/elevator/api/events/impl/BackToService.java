@@ -17,7 +17,7 @@ public class BackToService implements Event {
         return EventToken.BACK_TO_SERVICE;
     }
 
-    @Override public int getReceiverElevatorId() {
+    @Override public int getElevatorId() {
         return receiverElevatorId;
     }
 }

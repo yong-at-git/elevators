@@ -21,7 +21,7 @@ public class PowerOff implements Event {
         return EventToken.POWER_OFF;
     }
 
-    @Override public int getReceiverElevatorId() {
+    @Override public int getElevatorId() {
         return receiverElevatorId;
     }
 }

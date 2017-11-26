@@ -21,7 +21,7 @@ public class Emergency implements Event {
         return EventToken.EMERGENCY;
     }
 
-    @Override public int getReceiverElevatorId() {
+    @Override public int getElevatorId() {
         return receiverElevatorId;
     }
 }

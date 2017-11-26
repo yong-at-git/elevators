@@ -13,9 +13,11 @@ public enum EventToken {
     DOOR_OPENED,
     EMERGENCY,
     FLOOR_REQUESTED,
+    IDLE,
     MAINTAIN,
     MOVING_DOWN,
     MOVING_UP,
+    NEWLY_FREE,
     POWER_OFF,
     USER_WAITING
 }

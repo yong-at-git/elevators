@@ -46,7 +46,7 @@ public class ArriveFloor implements Event {
         return EventToken.ARRIVE;
     }
 
-    @Override public int getReceiverElevatorId() {
+    @Override public int getElevatorId() {
         return receiverElevatorId;
     }
 }

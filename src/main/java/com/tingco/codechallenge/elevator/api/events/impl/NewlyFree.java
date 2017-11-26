@@ -4,20 +4,20 @@ import com.tingco.codechallenge.elevator.api.events.Event;
 import com.tingco.codechallenge.elevator.api.events.EventToken;
 
 /**
- * Created by Yong Huang on 2017-11-23.
+ * Created by Yong Huang on 2017-11-26.
  */
-public class OpenDoor implements Event {
-    private int receiverElevatorId;
+public class NewlyFree implements Event {
+    private int elevatorId;
 
-    public OpenDoor(int receiverElevatorId) {
-        this.receiverElevatorId = receiverElevatorId;
+    public NewlyFree(int elevatorId) {
+        this.elevatorId = elevatorId;
     }
 
     @Override public EventToken getToken() {
-        return EventToken.OPEN_DOOR;
+        return null;
     }
 
     @Override public int getElevatorId() {
-        return receiverElevatorId;
+        return this.elevatorId;
     }
 }

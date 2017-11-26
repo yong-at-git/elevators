@@ -2,9 +2,13 @@ package com.tingco.codechallenge.elevator.api;
 
 import com.google.common.collect.Range;
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.tingco.codechallenge.elevator.api.events.EventFactory;
+import com.tingco.codechallenge.elevator.api.events.impl.NewlyFree;
 import com.tingco.codechallenge.elevator.api.exceptions.OutOfFloorRangeException;
 import com.tingco.codechallenge.elevator.api.validators.FloorValidator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -20,6 +24,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  */
 @Service
 public class ElevatorControllerImpl implements ElevatorController {
+    private static final Logger LOGGER = LogManager.getLogger(ElevatorControllerImpl.class);
 
     @Autowired
     EventBus eventBus;
@@ -64,6 +69,8 @@ public class ElevatorControllerImpl implements ElevatorController {
             freeElevators.offer(elevator);
             this.eventBus.register(elevator);
         }
+
+        this.eventBus.register(this);
     }
 
     @Override public Elevator requestElevator(int toFloor) {
@@ -104,6 +111,11 @@ public class ElevatorControllerImpl implements ElevatorController {
 
     public int requestElevatorId(int toFloor) {
         return this.requestElevator(toFloor).getId();
+    }
+
+    @Subscribe
+    void onElevatorNewlyFree(NewlyFree newlyFree) {
+        LOGGER.info("Elevator: {} is newly free.", newlyFree.getElevatorId());
     }
 
     private ElevatorConfiguration createElevatorConfiguration() {

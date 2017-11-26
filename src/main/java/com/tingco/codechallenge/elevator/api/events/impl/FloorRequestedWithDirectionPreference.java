@@ -70,7 +70,7 @@ public class FloorRequestedWithDirectionPreference extends FloorRequested {
         return waitingFloor;
     }
 
-    @Override public int getReceiverElevatorId() {
+    @Override public int getElevatorId() {
         return receiverElevatorId;
     }
 }

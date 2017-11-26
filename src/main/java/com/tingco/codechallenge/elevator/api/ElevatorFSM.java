@@ -12,6 +12,7 @@ import com.tingco.codechallenge.elevator.api.events.impl.DoorOpened;
 import com.tingco.codechallenge.elevator.api.events.impl.FloorRequested;
 import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithDirectionPreference;
 import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithNumberPreference;
+import com.tingco.codechallenge.elevator.api.events.impl.Idle;
 import com.tingco.codechallenge.elevator.api.events.impl.Maintain;
 import com.tingco.codechallenge.elevator.api.events.impl.OpenDoor;
 import com.tingco.codechallenge.elevator.api.events.impl.PowerOff;
@@ -145,6 +146,18 @@ class ElevatorFSM {
                 break;
             default:
                 throwIllegalStateTransitionException(floorRequestedWithNumberPreference);
+        }
+    }
+
+    void onIdle(Idle idle) {
+        switch (elevator.getCurrentState().getToken()) {
+            case DOOR_CLOSING:
+            case MAINTENANCE:
+                EVENT_LOG.offer(idle.getToken());
+                updateStatusOnIdle();
+                break;
+            default:
+                throwIllegalStateTransitionException(idle);
         }
     }
 
@@ -292,7 +305,7 @@ class ElevatorFSM {
     }
 
     private void updateStatusOnBackToService() {
-        this.elevator.setCurrentState(StateFactory.createIdle());
+        this.elevator.getEventBus().post(EventFactory.createIdle(this.elevator.getId()));
     }
 
     private void updateStatusOnEmergency() {
@@ -449,8 +462,7 @@ class ElevatorFSM {
     private void updateStatusOnDoorClosed() {
         if (this.elevator.getDownwardsTargetFloors().isEmpty() && this.elevator.getUpwardsTargetFloors().isEmpty()) {
             LOGGER.info("Door Closed. No remaining request. Going idle.");
-            this.elevator.setCurrentState(StateFactory.createIdle());
-            this.elevator.setDirection(Elevator.Direction.NONE);
+            this.elevator.getEventBus().post(EventFactory.createIdle(this.elevator.getId()));
         } else if (this.elevator.getDownwardsTargetFloors().isEmpty()) {
             LOGGER.info("Door Closed. No downwards request left. Going up.");
             int toFloor = this.elevator.getUpwardsTargetFloors().peek();
@@ -470,6 +482,13 @@ class ElevatorFSM {
                 move(Elevator.Direction.DOWN);
             }
         }
+    }
+
+    private void updateStatusOnIdle() {
+        this.elevator.setCurrentState(StateFactory.createIdle());
+        this.elevator.setDirection(Elevator.Direction.NONE);
+
+        this.elevator.getEventBus().post(EventFactory.createNewlyFree(this.elevator.getId()));
     }
 
     private void throwIllegalStateTransitionException(Event event) {
