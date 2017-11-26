@@ -1,8 +1,13 @@
 package com.tingco.codechallenge.elevator.resources;
 
 import com.tingco.codechallenge.elevator.api.ElevatorControllerImpl;
-import com.tingco.codechallenge.elevator.api.RideRequest;
+import com.tingco.codechallenge.elevator.api.exceptions.MissingRidingElevatorException;
+import com.tingco.codechallenge.elevator.api.exceptions.MissingWaitingDirectionException;
 import com.tingco.codechallenge.elevator.api.exceptions.OutOfFloorRangeException;
+import com.tingco.codechallenge.elevator.api.requests.UserRiding;
+import com.tingco.codechallenge.elevator.api.requests.UserWaiting;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +24,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/rest/v1")
 public final class ElevatorControllerEndPoints {
+    private static final Logger LOGGER = LogManager.getLogger(ElevatorControllerEndPoints.class);
+
     @Autowired ElevatorControllerImpl elevatorControllerImpl;
 
     /**
@@ -31,11 +38,28 @@ public final class ElevatorControllerEndPoints {
         return "pong";
     }
 
-    @PostMapping(value = "/requests")
-    public ResponseEntity<String> createRideRequest(@RequestBody RideRequest rideRequest) {
+    @PostMapping(value = "/requests/waitings")
+    public ResponseEntity<String> createRideRequest(@RequestBody UserWaiting userWaiting) {
+        LOGGER.info("Receiving request={}", userWaiting);
+
         try {
-            this.elevatorControllerImpl.processRequest(rideRequest);
-        } catch (OutOfFloorRangeException e) {
+            this.elevatorControllerImpl.createUserWaitingRequest(userWaiting);
+        } catch (OutOfFloorRangeException | MissingWaitingDirectionException e) {
+            LOGGER.error("Exception on request={}", userWaiting, e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping(value = "/requests/ridings")
+    public ResponseEntity<String> createRideRequest(@RequestBody UserRiding userRiding) {
+        LOGGER.info("Receiving request={}", userRiding);
+
+        try {
+            this.elevatorControllerImpl.createUserRidingRequest(userRiding);
+        } catch (OutOfFloorRangeException | MissingRidingElevatorException e) {
+            LOGGER.error("Exception on request={}", userRiding, e);
             return ResponseEntity.badRequest().body(e.getMessage());
         }
 

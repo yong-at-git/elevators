@@ -6,9 +6,14 @@ import com.google.common.eventbus.Subscribe;
 import com.tingco.codechallenge.elevator.api.events.EventFactory;
 import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithDirectionPreference;
 import com.tingco.codechallenge.elevator.api.events.impl.NewlyFree;
+import com.tingco.codechallenge.elevator.api.exceptions.MissingRidingElevatorException;
+import com.tingco.codechallenge.elevator.api.exceptions.MissingWaitingDirectionException;
 import com.tingco.codechallenge.elevator.api.exceptions.OutOfFloorRangeException;
+import com.tingco.codechallenge.elevator.api.requests.UserRiding;
+import com.tingco.codechallenge.elevator.api.requests.UserWaiting;
 import com.tingco.codechallenge.elevator.api.utils.ComparatorFactory;
-import com.tingco.codechallenge.elevator.api.validators.FloorValidator;
+import com.tingco.codechallenge.elevator.api.validators.RidingRequestValidator;
+import com.tingco.codechallenge.elevator.api.validators.WaitingRequestValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +44,9 @@ public class ElevatorControllerImpl implements ElevatorController {
     @Autowired
     EventBus eventBus;
 
+    // to be initialized before put into service
+    private Range<Integer> elevatorFloorRange;
+
     private List<Elevator> elevators = new ArrayList<>();
     private Queue<Elevator> freeElevators = new LinkedBlockingDeque<>();
 
@@ -56,6 +64,7 @@ public class ElevatorControllerImpl implements ElevatorController {
         }
 
         this.eventBus.register(this);
+        this.elevatorFloorRange = Range.closed(this.elevatorConfiguration.getBottomFloor(), this.elevatorConfiguration.getTopFloor());
     }
 
     @Override public Elevator requestElevator(int toFloor) {
@@ -78,28 +87,22 @@ public class ElevatorControllerImpl implements ElevatorController {
         this.freeElevators.offer(elevator);
     }
 
-    public void processRequest(RideRequest rideRequest) throws OutOfFloorRangeException {
-        final int toFloor = rideRequest.getToFloor();
-        FloorValidator.validate(toFloor, Range.closed(this.elevatorConfiguration.getBottomFloor(), this.elevatorConfiguration.getTopFloor()));
+    public void createUserWaitingRequest(UserWaiting userWaiting)
+        throws OutOfFloorRangeException, MissingWaitingDirectionException {
+        WaitingRequestValidator.validate(userWaiting, this.elevatorFloorRange);
 
-        if (rideRequest.getTowards() != ElevatorImpl.Direction.NONE) {
-            ElevatorImpl.Direction towards = rideRequest.getTowards();
-            createFloorRequestWithDirectionPreference(toFloor, towards);
-        } else {
-            createFloorRequestWithNumberPreference(toFloor);
-        }
-    }
-
-    private void createFloorRequestWithNumberPreference(int toFloor) {
-        Elevator allocated = requestElevator(toFloor);
-
-        this.eventBus.post(EventFactory.createFloorRequested(allocated.getId(), toFloor));
-    }
-
-    private void createFloorRequestWithDirectionPreference(int waitingFloor, ElevatorImpl.Direction towards) {
+        final int waitingFloor = userWaiting.getWaitingFloor();
         Elevator allocated = requestElevator(waitingFloor);
 
-        this.eventBus.post(EventFactory.createUserWaiting(allocated.getId(), towards, waitingFloor));
+        this.eventBus.post(EventFactory.createUserWaiting(allocated.getId(), userWaiting.getTowards(), waitingFloor));
+    }
+
+    public void createUserRidingRequest(UserRiding userRiding) throws OutOfFloorRangeException, MissingRidingElevatorException {
+        RidingRequestValidator.validate(userRiding, this.elevatorFloorRange);
+
+        final int toFloor = userRiding.getToFloor();
+        Elevator allocated = requestElevator(toFloor);
+        this.eventBus.post(EventFactory.createFloorRequested(allocated.getId(), toFloor));
     }
 
     public int requestElevatorId(int toFloor) {
