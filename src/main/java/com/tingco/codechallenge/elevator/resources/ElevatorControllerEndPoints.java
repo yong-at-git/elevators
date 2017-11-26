@@ -1,6 +1,7 @@
 package com.tingco.codechallenge.elevator.resources;
 
 import com.tingco.codechallenge.elevator.api.ElevatorControllerImpl;
+import com.tingco.codechallenge.elevator.api.exceptions.InvalidRidingElevatorIdException;
 import com.tingco.codechallenge.elevator.api.exceptions.MissingRidingElevatorException;
 import com.tingco.codechallenge.elevator.api.exceptions.MissingWaitingDirectionException;
 import com.tingco.codechallenge.elevator.api.exceptions.OutOfFloorRangeException;
@@ -58,7 +59,7 @@ public final class ElevatorControllerEndPoints {
 
         try {
             this.elevatorControllerImpl.createUserRidingRequest(userRiding);
-        } catch (OutOfFloorRangeException | MissingRidingElevatorException e) {
+        } catch (OutOfFloorRangeException | MissingRidingElevatorException | InvalidRidingElevatorIdException e) {
             LOGGER.error("Exception on request={}", userRiding, e);
             return ResponseEntity.badRequest().body(e.getMessage());
         }

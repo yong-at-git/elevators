@@ -5,6 +5,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.tingco.codechallenge.elevator.api.events.EventFactory;
 import com.tingco.codechallenge.elevator.api.events.impl.NewlyFree;
+import com.tingco.codechallenge.elevator.api.exceptions.InvalidRidingElevatorIdException;
 import com.tingco.codechallenge.elevator.api.exceptions.MissingRidingElevatorException;
 import com.tingco.codechallenge.elevator.api.exceptions.MissingWaitingDirectionException;
 import com.tingco.codechallenge.elevator.api.exceptions.OutOfFloorRangeException;
@@ -24,8 +25,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
 
 /**
  * Created by Yong Huang on 2017-11-20.
@@ -45,6 +48,7 @@ public class ElevatorControllerImpl implements ElevatorController {
 
     // to be initialized before put into service
     private Range<Integer> elevatorFloorRange;
+    private Set<Integer> validElevatorIds;
 
     private List<ElevatorImpl> elevators = new ArrayList<>();
     private Queue<ElevatorImpl> freeElevators = new LinkedBlockingDeque<>();
@@ -64,6 +68,7 @@ public class ElevatorControllerImpl implements ElevatorController {
 
         this.eventBus.register(this);
         this.elevatorFloorRange = Range.closed(this.elevatorConfiguration.getBottomFloor(), this.elevatorConfiguration.getTopFloor());
+        this.validElevatorIds = this.elevators.stream().map(Elevator::getId).collect(Collectors.toSet());
     }
 
     @Override public Elevator requestElevator(int toFloor) {
@@ -96,8 +101,9 @@ public class ElevatorControllerImpl implements ElevatorController {
         this.eventBus.post(EventFactory.createUserWaiting(allocated.getId(), userWaiting.getTowards(), waitingFloor));
     }
 
-    public void createUserRidingRequest(UserRiding userRiding) throws OutOfFloorRangeException, MissingRidingElevatorException {
-        RidingRequestValidator.validate(userRiding, this.elevatorFloorRange);
+    public void createUserRidingRequest(UserRiding userRiding) throws OutOfFloorRangeException, MissingRidingElevatorException,
+        InvalidRidingElevatorIdException {
+        RidingRequestValidator.validate(userRiding, this.elevatorFloorRange, this.validElevatorIds);
 
         final int toFloor = userRiding.getToFloor();
         final int ridingElevatorId = userRiding.getRidingElevatorId();
