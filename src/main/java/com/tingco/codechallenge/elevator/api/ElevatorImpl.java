@@ -243,11 +243,11 @@ public class ElevatorImpl implements Elevator {
         return eventBus;
     }
 
-    PriorityQueue<Integer> getUpwardsTargetFloors() {
+    public PriorityQueue<Integer> getUpwardsTargetFloors() {
         return upwardsTargetFloors;
     }
 
-    PriorityQueue<Integer> getDownwardsTargetFloors() {
+    public PriorityQueue<Integer> getDownwardsTargetFloors() {
         return downwardsTargetFloors;
     }
 

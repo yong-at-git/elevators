@@ -29,7 +29,7 @@ public class RidingRequestValidator {
     }
 
     public static final void isElevatorIdValid(UserRiding userRiding, Set<Integer> validElevatorIds) throws InvalidRidingElevatorIdException {
-        if (validElevatorIds.contains(userRiding.getRidingElevatorId())) {
+        if (!validElevatorIds.contains(userRiding.getRidingElevatorId())) {
             throw new InvalidRidingElevatorIdException("Invalid riding elevator id=" + userRiding.getRidingElevatorId());
         }
     }

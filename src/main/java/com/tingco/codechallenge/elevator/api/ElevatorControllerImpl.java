@@ -95,10 +95,93 @@ public class ElevatorControllerImpl implements ElevatorController {
         throws OutOfFloorRangeException, MissingWaitingDirectionException {
         WaitingRequestValidator.validate(userWaiting, this.elevatorFloorRange);
 
-        final int waitingFloor = userWaiting.getWaitingFloor();
-        Elevator allocated = requestElevator(waitingFloor);
+        if (this.timedQueueForAllWaitingRequests.contains(userWaiting)) {
+            LOGGER.info("Waiting request={} already exists.", userWaiting);
+            return;
+        }
 
-        this.eventBus.post(EventFactory.createUserWaiting(allocated.getId(), userWaiting.getTowards(), waitingFloor));
+        final int waitingFloor = userWaiting.getWaitingFloor();
+        final Elevator.Direction towards = userWaiting.getTowards();
+
+        if (!this.freeElevators.isEmpty()) {
+            Elevator freeElevator = this.freeElevators.poll();
+            this.eventBus.post(EventFactory.createUserWaiting(freeElevator.getId(), towards, waitingFloor));
+
+            LOGGER.info("Allocating elevator={} to waiting request={}", freeElevator.getId(), userWaiting);
+            return;
+        }
+
+        switch (userWaiting.getTowards()) {
+            case UP:
+                List<ElevatorImpl> lowerFloorElevatorsMovingUpwards = getLowerFloorElevatorsMovingUpwards(waitingFloor);
+
+                if (lowerFloorElevatorsMovingUpwards.isEmpty()) {
+                    LOGGER.info("Enqueue waiting request={} because of no elevator moving upwards.", userWaiting);
+
+                    this.timedQueueForAllWaitingRequests.offer(userWaiting);
+                    this.upwardsWaitingQueue.offer(userWaiting);
+                } else {
+                    sendUpwardsRequestToBestSuitElevator(waitingFloor, lowerFloorElevatorsMovingUpwards);
+                }
+
+                return;
+            case DOWN:
+                List<ElevatorImpl> upperFloorElevatorsMovingDownwards = getUpperFloorElevatorsMovingDownwards(waitingFloor);
+
+                if (upperFloorElevatorsMovingDownwards.isEmpty()) {
+                    LOGGER.info("Enqueue waiting request={} because of no elevator moving downwards.", userWaiting);
+
+                    this.timedQueueForAllWaitingRequests.offer(userWaiting);
+                    this.downwardsWaitingQueue.offer(userWaiting);
+                } else {
+                    sendDownwardsRequestToBestSuitElevator(waitingFloor, upperFloorElevatorsMovingDownwards);
+                }
+
+                return;
+            default:
+                LOGGER.info("Ignore waiting request={}.", userWaiting);
+                return;
+        }
+    }
+
+    private List<ElevatorImpl> getLowerFloorElevatorsMovingUpwards(final int waitingFloor) {
+        return this.elevators
+            .stream()
+            .filter(elevator -> elevator.getAddressedFloor() < waitingFloor)
+            .filter(elevator -> elevator.isOnUpPath())
+            .collect(Collectors.toList());
+    }
+
+    private void sendUpwardsRequestToBestSuitElevator(final int waitingFloor, List<ElevatorImpl> lowerFloorElevatorsMovingOnUpPath) {
+        lowerFloorElevatorsMovingOnUpPath
+            .stream()
+            .sorted(ComparatorFactory.byAmountOfUpwardsRequestsLowerThanFloor(waitingFloor))
+            .findFirst()
+            .ifPresent(
+                elevator -> {
+                    LOGGER.info("Sending upwards waiting request={} to best suit elevator={}.", waitingFloor, elevator.getId());
+                    this.eventBus.post(EventFactory.createUserWaiting(elevator.getId(), Elevator.Direction.UP, waitingFloor));
+                });
+    }
+
+    private List<ElevatorImpl> getUpperFloorElevatorsMovingDownwards(int waitingFloor) {
+        return this.elevators
+            .stream()
+            .filter(elevator -> elevator.getAddressedFloor() > waitingFloor)
+            .filter(elevator -> elevator.isOnDownPath())
+            .collect(Collectors.toList());
+    }
+
+    private void sendDownwardsRequestToBestSuitElevator(final int waitingFloor, List<ElevatorImpl> upperFloorElevatorsMovingOnDownPath) {
+        upperFloorElevatorsMovingOnDownPath
+            .stream()
+            .sorted(ComparatorFactory.byAmountOfDownwardsRequestsHigherThanFloor(waitingFloor))
+            .findFirst()
+            .ifPresent(
+                elevator -> {
+                    LOGGER.info("Sending downwards waiting request={} to best suit elevator={}.", waitingFloor, elevator.getId());
+                    this.eventBus.post(EventFactory.createUserWaiting(elevator.getId(), Elevator.Direction.DOWN, waitingFloor));
+                });
     }
 
     /**
@@ -127,14 +210,6 @@ public class ElevatorControllerImpl implements ElevatorController {
                     return true;
                 }
             );
-    }
-
-    public int requestElevatorId(int toFloor) {
-        return this.requestElevator(toFloor).getId();
-    }
-
-    private void processWaitingQueue() {
-
     }
 
     @Subscribe
