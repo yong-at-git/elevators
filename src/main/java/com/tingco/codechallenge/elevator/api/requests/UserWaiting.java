@@ -33,11 +33,11 @@ public class UserWaiting {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        UserWaiting that = (UserWaiting) o;
+        UserWaiting waiting = (UserWaiting) o;
 
-        if (waitingFloor != that.waitingFloor)
+        if (waitingFloor != waiting.waitingFloor)
             return false;
-        return towards == that.towards;
+        return towards == waiting.towards;
     }
 
     @Override public int hashCode() {

@@ -25,6 +25,7 @@ import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -99,13 +100,13 @@ public class ElevatorControllerImpl implements ElevatorController {
      * @throws OutOfFloorRangeException         if the requested floor is beyond the closed range: [bottom, top]
      * @throws MissingWaitingDirectionException if the waiting request misses requested direction, e.g. UP, DOWN.
      */
-    public void createUserWaitingRequest(UserWaiting userWaiting)
+    public Optional<Integer> createUserWaitingRequest(UserWaiting userWaiting)
         throws OutOfFloorRangeException, MissingWaitingDirectionException {
         WaitingRequestValidator.validate(userWaiting, this.elevatorFloorRange);
 
         if (this.timedQueueForAllWaitingRequests.contains(userWaiting)) {
             LOGGER.info("Waiting request={} already exists.", userWaiting);
-            return;
+            return Optional.empty();
         }
 
         final int waitingFloor = userWaiting.getWaitingFloor();
@@ -116,10 +117,10 @@ public class ElevatorControllerImpl implements ElevatorController {
             this.eventBus.post(EventFactory.createUserWaiting(freeElevator.getId(), towards, waitingFloor));
 
             LOGGER.info("Allocating elevator={} to waiting request={}", freeElevator.getId(), userWaiting);
-            return;
+            return Optional.of(freeElevator.getId());
         }
 
-        tryAllocatingBusyElevatorToRequest(userWaiting);
+        return tryAllocatingBusyElevatorToRequest(userWaiting);
     }
 
     /**
@@ -184,32 +185,32 @@ public class ElevatorControllerImpl implements ElevatorController {
 
         while (iterator.hasNext()) {
             UserWaiting waitingRequest = iterator.next();
-            boolean isRequestDelegatedToElevator = tryAllocatingBusyElevatorToRequest(waitingRequest);
-            if (isRequestDelegatedToElevator) {
+            Optional<Integer> isRequestDelegatedToElevator = tryAllocatingBusyElevatorToRequest(waitingRequest);
+            if (isRequestDelegatedToElevator.isPresent()) {
                 iterator.remove();
             }
         }
     }
 
     // return true if manage to delegate the request to an elevator; otherwise false
-    private boolean tryAllocatingBusyElevatorToRequest(UserWaiting userWaiting) {
+    private Optional<Integer> tryAllocatingBusyElevatorToRequest(UserWaiting userWaiting) {
         final int waitingFloor = userWaiting.getWaitingFloor();
-        boolean isRequestDelegatedToElevator = false;
+        Optional delegatedElevatorId = Optional.empty();
 
         switch (userWaiting.getTowards()) {
             case UP:
                 List<ElevatorImpl> lowerFloorElevatorsMovingUpwards = getLowerFloorElevatorsMovingUpwards(waitingFloor);
 
                 if (lowerFloorElevatorsMovingUpwards.isEmpty()) {
-                    LOGGER.info("Enqueue waiting request={} because of no elevator moving upwards.", userWaiting);
-
                     if (!this.timedQueueForAllWaitingRequests.contains(userWaiting)) {
+                        LOGGER.info("Enqueue waiting request={} because of no elevator moving upwards.", userWaiting);
                         // this check will support the scheduled job to reuse this method
                         this.timedQueueForAllWaitingRequests.offer(userWaiting);
                     }
                 } else {
-                    sendUpwardsRequestToBestSuitElevator(waitingFloor, lowerFloorElevatorsMovingUpwards);
-                    isRequestDelegatedToElevator = true;
+                    AllocatedElevator toBePopulatedWithId = new AllocatedElevator();
+                    sendUpwardsRequestToBestSuitElevator(waitingFloor, lowerFloorElevatorsMovingUpwards, toBePopulatedWithId);
+                    delegatedElevatorId = Optional.of(toBePopulatedWithId.getId());
                 }
 
                 break;
@@ -217,25 +218,24 @@ public class ElevatorControllerImpl implements ElevatorController {
                 List<ElevatorImpl> upperFloorElevatorsMovingDownwards = getUpperFloorElevatorsMovingDownwards(waitingFloor);
 
                 if (upperFloorElevatorsMovingDownwards.isEmpty()) {
-                    LOGGER.info("Enqueue waiting request={} because of no elevator moving downwards.", userWaiting);
-
                     if (!this.timedQueueForAllWaitingRequests.contains(userWaiting)) {
+                        LOGGER.info("Enqueue waiting request={} because of no elevator moving downwards.", userWaiting);
                         // this check will support the scheduled job to reuse this method
                         this.timedQueueForAllWaitingRequests.offer(userWaiting);
                     }
                 } else {
-                    sendDownwardsRequestToBestSuitElevator(waitingFloor, upperFloorElevatorsMovingDownwards);
-                    isRequestDelegatedToElevator = true;
+                    AllocatedElevator toBePopulatedWithId = new AllocatedElevator();
+                    sendDownwardsRequestToBestSuitElevator(waitingFloor, upperFloorElevatorsMovingDownwards, toBePopulatedWithId);
+                    delegatedElevatorId = Optional.of(toBePopulatedWithId.getId());
                 }
 
                 break;
             default:
                 LOGGER.info("Ignore waiting request={}.", userWaiting);
-                isRequestDelegatedToElevator = true; // consider this request as consumed.
                 break;
         }
 
-        return isRequestDelegatedToElevator;
+        return delegatedElevatorId;
     }
 
     private List<ElevatorImpl> getLowerFloorElevatorsMovingUpwards(final int waitingFloor) {
@@ -246,7 +246,8 @@ public class ElevatorControllerImpl implements ElevatorController {
             .collect(Collectors.toList());
     }
 
-    private void sendUpwardsRequestToBestSuitElevator(final int waitingFloor, List<ElevatorImpl> lowerFloorElevatorsMovingOnUpPath) {
+    private void sendUpwardsRequestToBestSuitElevator(final int waitingFloor, List<ElevatorImpl> lowerFloorElevatorsMovingOnUpPath,
+        AllocatedElevator toBePopulatedWithId) {
         lowerFloorElevatorsMovingOnUpPath
             .stream()
             .sorted(ComparatorFactory.byAmountOfUpwardsRequestsLowerThanFloor(waitingFloor))
@@ -254,7 +255,9 @@ public class ElevatorControllerImpl implements ElevatorController {
             .ifPresent(
                 elevator -> {
                     LOGGER.info("Sending upwards waiting request={} to best suit elevator={}.", waitingFloor, elevator.getId());
+
                     this.eventBus.post(EventFactory.createUserWaiting(elevator.getId(), Elevator.Direction.UP, waitingFloor));
+                    toBePopulatedWithId.setId(elevator.getId());
                 });
     }
 
@@ -266,7 +269,8 @@ public class ElevatorControllerImpl implements ElevatorController {
             .collect(Collectors.toList());
     }
 
-    private void sendDownwardsRequestToBestSuitElevator(final int waitingFloor, List<ElevatorImpl> upperFloorElevatorsMovingOnDownPath) {
+    private void sendDownwardsRequestToBestSuitElevator(final int waitingFloor, List<ElevatorImpl> upperFloorElevatorsMovingOnDownPath,
+        AllocatedElevator toBePopulatedWithId) {
         upperFloorElevatorsMovingOnDownPath
             .stream()
             .sorted(ComparatorFactory.byAmountOfDownwardsRequestsHigherThanFloor(waitingFloor))
@@ -274,7 +278,21 @@ public class ElevatorControllerImpl implements ElevatorController {
             .ifPresent(
                 elevator -> {
                     LOGGER.info("Sending downwards waiting request={} to best suit elevator={}.", waitingFloor, elevator.getId());
+
                     this.eventBus.post(EventFactory.createUserWaiting(elevator.getId(), Elevator.Direction.DOWN, waitingFloor));
+                    toBePopulatedWithId.setId(elevator.getId());
                 });
+    }
+
+    private class AllocatedElevator {
+        private Integer id;
+
+        public void setId(Integer id) {
+            this.id = id;
+        }
+
+        public Integer getId() {
+            return id;
+        }
     }
 }

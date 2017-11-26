@@ -1,5 +1,6 @@
 package com.tingco.codechallenge.elevator.resources;
 
+import com.tingco.codechallenge.elevator.WaitingRequestResponse;
 import com.tingco.codechallenge.elevator.api.ElevatorControllerImpl;
 import com.tingco.codechallenge.elevator.api.exceptions.InvalidRidingElevatorIdException;
 import com.tingco.codechallenge.elevator.api.exceptions.MissingRidingElevatorException;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Optional;
 
 /**
  * Rest Resource.
@@ -40,17 +43,28 @@ public final class ElevatorControllerEndPoints {
     }
 
     @PostMapping(value = "/requests/waitings")
-    public ResponseEntity<String> createRideRequest(@RequestBody UserWaiting userWaiting) {
+    public ResponseEntity<WaitingRequestResponse> createRideRequest(@RequestBody UserWaiting userWaiting) {
         LOGGER.info("Receiving request={}", userWaiting);
+        WaitingRequestResponse requestResponse = new WaitingRequestResponse();
 
         try {
-            this.elevatorControllerImpl.createUserWaitingRequest(userWaiting);
+            Optional<Integer> allocatedElevatorId = this.elevatorControllerImpl.createUserWaitingRequest(userWaiting);
+            allocatedElevatorId.ifPresent(elevatorId -> {
+                requestResponse.setMessage("Elevator allocated.");
+                requestResponse.setAllocated_elevator_id(elevatorId);
+            });
+
+            if (!allocatedElevatorId.isPresent()) {
+                requestResponse.setMessage("No available elevator. Please wait.");
+            }
         } catch (OutOfFloorRangeException | MissingWaitingDirectionException e) {
             LOGGER.error("Exception on request={}", userWaiting, e);
-            return ResponseEntity.badRequest().body(e.getMessage());
+
+            requestResponse.setMessage(e.getMessage());
+            return ResponseEntity.badRequest().body(requestResponse);
         }
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(requestResponse);
     }
 
     @PostMapping(value = "/requests/ridings")
