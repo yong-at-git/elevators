@@ -91,6 +91,16 @@ public class ElevatorControllerImpl implements ElevatorController {
         this.freeElevators.offer((ElevatorImpl) elevator);
     }
 
+    /**
+     * Process new user waiting request by either : 1. allocating an elevator moving at the same direction as requested but not bypassing the waiting floor yet
+     * or 2. enqueuing the request.
+     * When there are more than one elevator moving at the requested direction, choose the one that has least request between its latest addressed floor
+     * and the waiting floor.
+     *
+     * @param userWaiting the user waiting request
+     * @throws OutOfFloorRangeException         if the requested floor is beyond the closed range: [bottom, top]
+     * @throws MissingWaitingDirectionException if the waiting request misses requested direction, e.g. UP, DOWN.
+     */
     public void createUserWaitingRequest(UserWaiting userWaiting)
         throws OutOfFloorRangeException, MissingWaitingDirectionException {
         WaitingRequestValidator.validate(userWaiting, this.elevatorFloorRange);
@@ -189,7 +199,7 @@ public class ElevatorControllerImpl implements ElevatorController {
      * request queue;otherwise ignore the request.
      *
      * @param userRiding an riding request from inside of an elevator.
-     * @throws OutOfFloorRangeException         if the requested floor is out of the range [bottom, top].
+     * @throws OutOfFloorRangeException         if the requested floor is out of the closed range [bottom, top].
      * @throws MissingRidingElevatorException   if no riding elevator id is provided.
      * @throws InvalidRidingElevatorIdException if the riding elevator id is provided but not a valid one.
      */
