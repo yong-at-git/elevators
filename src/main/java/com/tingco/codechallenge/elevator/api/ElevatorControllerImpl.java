@@ -46,8 +46,8 @@ public class ElevatorControllerImpl implements ElevatorController {
     // to be initialized before put into service
     private Range<Integer> elevatorFloorRange;
 
-    private List<Elevator> elevators = new ArrayList<>();
-    private Queue<Elevator> freeElevators = new LinkedBlockingDeque<>();
+    private List<ElevatorImpl> elevators = new ArrayList<>();
+    private Queue<ElevatorImpl> freeElevators = new LinkedBlockingDeque<>();
 
     private PriorityQueue<UserWaiting> upwardsWaitingQueue = new PriorityQueue<>(ComparatorFactory.naturalOrderByFloorNumber());
     private PriorityQueue<UserWaiting> downwardsWaitingQueue = new PriorityQueue<>(ComparatorFactory.reverseOrderByFloorNumber());
@@ -56,7 +56,7 @@ public class ElevatorControllerImpl implements ElevatorController {
     @PostConstruct
     void init() {
         for (int id = 1; id <= numberOfElevators; id++) {
-            Elevator elevator = new ElevatorImpl(this.eventBus, id, this.elevatorConfiguration);
+            ElevatorImpl elevator = new ElevatorImpl(this.eventBus, id, this.elevatorConfiguration);
             elevators.add(elevator);
             freeElevators.offer(elevator);
             this.eventBus.register(elevator);
@@ -79,11 +79,11 @@ public class ElevatorControllerImpl implements ElevatorController {
     }
 
     @Override public List<Elevator> getElevators() {
-        return this.elevators;
+        return new ArrayList<>(this.elevators);
     }
 
     @Override public void releaseElevator(Elevator elevator) {
-        this.freeElevators.offer(elevator);
+        this.freeElevators.offer((ElevatorImpl) elevator);
     }
 
     public void createUserWaitingRequest(UserWaiting userWaiting)
@@ -100,8 +100,18 @@ public class ElevatorControllerImpl implements ElevatorController {
         RidingRequestValidator.validate(userRiding, this.elevatorFloorRange);
 
         final int toFloor = userRiding.getToFloor();
-        Elevator allocated = requestElevator(toFloor);
-        this.eventBus.post(EventFactory.createFloorRequested(allocated.getId(), toFloor));
+        final int ridingElevatorId = userRiding.getRidingElevatorId();
+
+        this.elevators
+            .stream()
+            .filter(elevator -> elevator.getId() == ridingElevatorId)
+            .filter(elevator -> !elevator.isFloorAlreadyRequested(toFloor))//if a floor is already requested, then ignore the request.
+            .anyMatch(theRidingElevator -> {
+                    LOGGER.info("Sending request riding request={} to elevator={}.", userRiding, theRidingElevator.getId());
+                    this.eventBus.post(EventFactory.createFloorRequested(ridingElevatorId, toFloor));
+                    return true;
+                }
+            );
     }
 
     public int requestElevatorId(int toFloor) {
@@ -114,12 +124,12 @@ public class ElevatorControllerImpl implements ElevatorController {
 
     @Subscribe
     void onElevatorNewlyFree(NewlyFree newlyFree) {
-        LOGGER.info("Elevator={} is newly free. Put into free elevators queue.", newlyFree.getElevatorId());
+        LOGGER.info("Elevator={} is newly freed.", newlyFree.getElevatorId());
 
         int freedElevatorId = newlyFree.getElevatorId();
 
         if (timedQueueForAllWaitingRequests.isEmpty()) {
-            LOGGER.info("No pending request. Enqueue the freed elevator={}.", newlyFree);
+            LOGGER.info("No pending request. Enqueue the freed elevator={}.", freedElevatorId);
 
             this.elevators
                 .stream()

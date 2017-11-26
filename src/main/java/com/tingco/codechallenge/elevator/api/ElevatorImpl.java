@@ -122,6 +122,10 @@ public class ElevatorImpl implements Elevator {
         this.currentFloor = newFloor;
     }
 
+    boolean isFloorAlreadyRequested(int toFloor) {
+        return this.upwardsTargetFloors.contains(toFloor) || this.downwardsTargetFloors.contains(toFloor);
+    }
+
     private Direction getDirectionForRequest(int requestedFloor) {
         if (this.currentFloor == requestedFloor) {
             return Direction.NONE;

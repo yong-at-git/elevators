@@ -19,7 +19,7 @@ public class UserRiding {
 
     @JsonProperty("to_floor")
     public int getToFloor() {
-        return 0;
+        return this.toFloor;
     }
 
     @JsonProperty("riding_elevator_id")

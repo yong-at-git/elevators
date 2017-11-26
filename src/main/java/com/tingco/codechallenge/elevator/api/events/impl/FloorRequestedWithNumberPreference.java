@@ -16,13 +16,17 @@ public class FloorRequestedWithNumberPreference extends FloorRequested {
         this.receiverElevatorId = receiverElevatorId;
     }
 
-    public FloorRequestedWithNumberPreference(int toFloor) {
-        this.toFloor = toFloor;
-    }
-
     @Override
     public int getToFloor() {
         return toFloor;
+    }
+
+    @Override public EventToken getToken() {
+        return EventToken.FLOOR_REQUESTED;
+    }
+
+    @Override public int getElevatorId() {
+        return receiverElevatorId;
     }
 
     @Override public boolean equals(Object o) {
@@ -33,24 +37,21 @@ public class FloorRequestedWithNumberPreference extends FloorRequested {
 
         FloorRequestedWithNumberPreference that = (FloorRequestedWithNumberPreference) o;
 
-        return toFloor == that.toFloor;
+        if (toFloor != that.toFloor)
+            return false;
+        return receiverElevatorId == that.receiverElevatorId;
     }
 
     @Override public int hashCode() {
-        return toFloor;
+        int result = toFloor;
+        result = 31 * result + receiverElevatorId;
+        return result;
     }
 
     @Override public String toString() {
         return "FloorRequestedWithNumberPreference{" +
             "toFloor=" + toFloor +
+            ", receiverElevatorId=" + receiverElevatorId +
             '}';
-    }
-
-    @Override public EventToken getToken() {
-        return EventToken.FLOOR_REQUESTED;
-    }
-
-    @Override public int getElevatorId() {
-        return receiverElevatorId;
     }
 }

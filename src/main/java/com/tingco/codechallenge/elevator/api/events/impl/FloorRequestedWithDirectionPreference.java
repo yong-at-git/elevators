@@ -21,13 +21,6 @@ public class FloorRequestedWithDirectionPreference extends FloorRequested {
         this.receiverElevatorId = receiverElevatorId;
     }
 
-    public FloorRequestedWithDirectionPreference(int waitingFloor, ElevatorImpl.Direction towards) {
-        Objects.requireNonNull(towards);
-
-        this.waitingFloor = waitingFloor;
-        this.towards = towards;
-    }
-
     public int getWaitingFloor() {
         return waitingFloor;
     }

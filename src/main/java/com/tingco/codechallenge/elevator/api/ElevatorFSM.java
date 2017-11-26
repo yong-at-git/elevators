@@ -254,7 +254,7 @@ class ElevatorFSM {
                 }
                 break;
             case MOVING_UP:
-                if (isFloorAlreadyRequested(toFloor)) {
+                if (this.elevator.isFloorAlreadyRequested(toFloor)) {
                     LOGGER.info("Elevator={}: Floor={} is already requested.", this.elevator.getId(), toFloor);
                 } else {
                     if (toFloor > elevator.currentFloor()) {
@@ -267,7 +267,7 @@ class ElevatorFSM {
                 }
                 break;
             case MOVING_DOWN:
-                if (isFloorAlreadyRequested(toFloor)) {
+                if (this.elevator.isFloorAlreadyRequested(toFloor)) {
                     LOGGER.info("Elevator={}: Floor={} is already requested.", this.elevator.getId(), toFloor);
                 } else {
                     if (toFloor >= elevator.currentFloor()) {
@@ -283,7 +283,7 @@ class ElevatorFSM {
             case DOOR_OPENING:
             case DOOR_OPENED:
             case DOOR_CLOSING:
-                if (isFloorAlreadyRequested(toFloor)) {
+                if (this.elevator.isFloorAlreadyRequested(toFloor)) {
                     LOGGER.info("Elevator={}: Floor={} is already requested.", this.elevator.getId(), toFloor);
                 } else {
                     if (toFloor > elevator.currentFloor()) {
@@ -333,7 +333,9 @@ class ElevatorFSM {
                 doMovingDown();
                 break;
             default:
-                LOGGER.info("Elevator={}: No movement on direction={}", this.elevator.getId(), requestedDirection);
+                LOGGER.info("Elevator={}: No movement on direction={}. Stay occupied and waiting for further riding request.",
+                    this.elevator.getId(),
+                    requestedDirection);
                 break;
         }
     }
@@ -397,7 +399,7 @@ class ElevatorFSM {
         LOGGER.info("Elevator={}: Arriving floor={}", this.elevator.getId(), arrivedFloor);
         this.elevator.setCurrentFloor(arrivedFloor);
 
-        if (!isFloorAlreadyRequested(arrivedFloor)) {
+        if (!this.elevator.isFloorAlreadyRequested(arrivedFloor)) {
             // bypass unrequested floor
             return;
         }
@@ -420,11 +422,6 @@ class ElevatorFSM {
             }
         }
         this.elevator.getEventBus().post(EventFactory.createOpenDoor(this.elevator.getId()));
-    }
-
-    private boolean isFloorAlreadyRequested(int arrivedFloor) {
-        return this.elevator.getUpwardsTargetFloors().contains(arrivedFloor)
-            || this.elevator.getDownwardsTargetFloors().contains(arrivedFloor);
     }
 
     private void updateStatusOnOpenDoor() {

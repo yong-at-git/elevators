@@ -57,7 +57,7 @@ public class EventFactory {
     }
 
     public static final FloorRequestedWithNumberPreference createFloorRequested(int elevatorId, int toFloor) {
-        return new FloorRequestedWithNumberPreference(toFloor);
+        return new FloorRequestedWithNumberPreference(elevatorId, toFloor);
     }
 
     public static final Idle createIdle(int elevatorId) {
