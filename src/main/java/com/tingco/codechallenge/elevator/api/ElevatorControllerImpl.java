@@ -86,6 +86,11 @@ public class ElevatorControllerImpl implements ElevatorController {
         return new ArrayList<>(this.elevators);
     }
 
+    // because of Elevator's visibility
+    public List<ElevatorImpl> getAllElevators() {
+        return this.elevators;
+    }
+
     @Override public void releaseElevator(Elevator elevator) {
         this.freeElevators.offer((ElevatorImpl) elevator);
     }

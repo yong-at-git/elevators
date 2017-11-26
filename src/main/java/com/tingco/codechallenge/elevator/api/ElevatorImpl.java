@@ -4,6 +4,7 @@ import com.google.common.collect.Range;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.tingco.codechallenge.elevator.api.events.EventFactory;
+import com.tingco.codechallenge.elevator.api.events.EventToken;
 import com.tingco.codechallenge.elevator.api.events.impl.ArriveFloor;
 import com.tingco.codechallenge.elevator.api.events.impl.BackToService;
 import com.tingco.codechallenge.elevator.api.events.impl.CloseDoor;
@@ -26,6 +27,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Comparator;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 
 /**
@@ -42,6 +45,7 @@ public class ElevatorImpl implements Elevator {
     private EventBus eventBus;
     private ElevatorConfiguration configuration;
 
+    private final LinkedBlockingQueue<EventToken> EVENT_LOG_CACHE = new LinkedBlockingQueue<>();
     private PriorityBlockingQueue<Integer> upwardsTargetFloors = new PriorityBlockingQueue<>();
     private static final int INIT_CAPACITY = 11; // See PriorityBlockingQueue Javadoc
     private PriorityBlockingQueue<Integer> downwardsTargetFloors = new PriorityBlockingQueue<>(INIT_CAPACITY, Comparator.reverseOrder());
@@ -114,7 +118,7 @@ public class ElevatorImpl implements Elevator {
         return Direction.DOWN.equals(this.direction);
     }
 
-    ElevatorState getCurrentState() {
+    public ElevatorState getCurrentState() {
         return currentState;
     }
 
@@ -124,8 +128,16 @@ public class ElevatorImpl implements Elevator {
 
         if (ElevatorStateToken.IDLE.equals(newState.getToken())) {
             LOGGER.info("Elevator={}: The recorded events={}", this.getId(), this.fsm.getEVENT_LOG());
-            this.fsm.getEVENT_LOG().clear();
+
+            this.EVENT_LOG_CACHE.clear();
+            while (this.fsm.getEVENT_LOG().isEmpty()) {
+                this.EVENT_LOG_CACHE.offer(this.fsm.getEVENT_LOG().poll());
+            }
         }
+    }
+
+    public Queue<EventToken> getEventLog() {
+        return this.EVENT_LOG_CACHE;
     }
 
     void setDirection(Direction direction) {
