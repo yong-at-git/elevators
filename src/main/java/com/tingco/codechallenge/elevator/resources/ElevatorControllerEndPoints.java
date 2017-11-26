@@ -43,7 +43,7 @@ public final class ElevatorControllerEndPoints {
     }
 
     @PostMapping(value = "/requests/waitings")
-    public ResponseEntity<WaitingRequestResponse> createRideRequest(@RequestBody UserWaiting userWaiting) {
+    public ResponseEntity<WaitingRequestResponse> createWaitingRequest(@RequestBody UserWaiting userWaiting) {
         LOGGER.info("Receiving request={}", userWaiting);
         WaitingRequestResponse requestResponse = new WaitingRequestResponse();
 
@@ -68,7 +68,7 @@ public final class ElevatorControllerEndPoints {
     }
 
     @PostMapping(value = "/requests/ridings")
-    public ResponseEntity<String> createRideRequest(@RequestBody UserRiding userRiding) {
+    public ResponseEntity<String> createRidingRequest(@RequestBody UserRiding userRiding) {
         LOGGER.info("Receiving request={}", userRiding);
 
         try {
