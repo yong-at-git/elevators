@@ -22,7 +22,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * This FSM class simulates the behaviors of an elevator, based on its current state and the triggering event.
@@ -35,7 +35,7 @@ class ElevatorFSM {
     private final ElevatorImpl elevator;
     private static final Logger LOGGER = LogManager.getLogger(ElevatorFSM.class);
     private volatile boolean isMotorRunning = false;
-    private final Queue<EventToken> EVENT_LOG = new ConcurrentLinkedDeque<>();
+    private final LinkedBlockingQueue<EventToken> EVENT_LOG = new LinkedBlockingQueue<>();
 
     ElevatorFSM(ElevatorImpl elevator) {
         this.elevator = elevator;
@@ -333,7 +333,8 @@ class ElevatorFSM {
                 doMovingDown();
                 break;
             default:
-                LOGGER.info("Elevator={}: No movement on direction={}. Stay occupied and waiting for further riding request.",
+                LOGGER.info(
+                    "Elevator={}: No movement on direction={}. Stay still and waiting for further riding request.",
                     this.elevator.getId(),
                     requestedDirection);
                 break;
