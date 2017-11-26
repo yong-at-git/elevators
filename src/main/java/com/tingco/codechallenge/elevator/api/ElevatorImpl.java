@@ -57,7 +57,13 @@ public class ElevatorImpl implements Elevator {
         this.configuration = configuration;
     }
 
-    @Override public Direction getDirection() {
+    /**
+     * See also {@link #isOnDownPath()} and {@link #isOnUpPath()}.
+     *
+     * @return the direction/path of the elevator.
+     */
+    @Override
+    public Direction getDirection() {
         return this.direction;
     }
 
@@ -88,10 +94,22 @@ public class ElevatorImpl implements Elevator {
         return this.currentFloor;
     }
 
+    /**
+     * Check if: 1. an already riding elevator is running upwards or
+     * 2. an elevator has been idle and is now requested to move upwards, even though it might need to move down first to pick up the user.
+     *
+     * @return true if the elevator intends to be on its upwards path; otherwise false.
+     */
     public boolean isOnUpPath() {
         return Direction.UP.equals(this.direction);
     }
 
+    /**
+     * Check if: 1. an already riding elevator is running downwards or
+     * 2. an elevator has been idle and is now requested to move downwards, even though it might need to move up first to pick up the user.
+     *
+     * @return true if the elevator intends to be on its upwards path; otherwise false.
+     */
     public boolean isOnDownPath() {
         return Direction.DOWN.equals(this.direction);
     }
@@ -120,14 +138,6 @@ public class ElevatorImpl implements Elevator {
 
     boolean isFloorAlreadyRequested(int toFloor) {
         return this.upwardsTargetFloors.contains(toFloor) || this.downwardsTargetFloors.contains(toFloor);
-    }
-
-    private Direction getDirectionForRequest(int requestedFloor) {
-        if (this.currentFloor == requestedFloor) {
-            return Direction.NONE;
-        }
-
-        return requestedFloor > this.currentFloor ? Direction.UP : Direction.DOWN;
     }
 
     @Subscribe

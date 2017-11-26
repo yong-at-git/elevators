@@ -70,16 +70,15 @@ public class ElevatorControllerImpl implements ElevatorController {
         this.validElevatorIds = this.elevators.stream().map(Elevator::getId).collect(Collectors.toSet());
     }
 
-    @Override public Elevator requestElevator(int toFloor) {
-        if (!this.freeElevators.isEmpty()) {
-            Elevator freeElevator = this.freeElevators.poll();
-            // TODO: post event to the allocated elevator
-            return freeElevator;
-        }
-
-        // TODO: design the algorithms here
-
-        return this.freeElevators.poll();
+    /**
+     * Use {@link #createUserRidingRequest(UserRiding)} or {@link #createUserWaitingRequest(UserWaiting)}.
+     *
+     * @return null
+     */
+    @Deprecated
+    @Override
+    public Elevator requestElevator(int toFloor) {
+        return null;
     }
 
     @Override public List<Elevator> getElevators() {
@@ -242,7 +241,7 @@ public class ElevatorControllerImpl implements ElevatorController {
     private List<ElevatorImpl> getLowerFloorElevatorsMovingUpwards(final int waitingFloor) {
         return this.elevators
             .stream()
-            .filter(elevator -> elevator.getAddressedFloor() < waitingFloor)
+            .filter(elevator -> elevator.currentFloor() < waitingFloor)
             .filter(elevator -> elevator.isOnUpPath())
             .collect(Collectors.toList());
     }
@@ -262,7 +261,7 @@ public class ElevatorControllerImpl implements ElevatorController {
     private List<ElevatorImpl> getUpperFloorElevatorsMovingDownwards(int waitingFloor) {
         return this.elevators
             .stream()
-            .filter(elevator -> elevator.getAddressedFloor() > waitingFloor)
+            .filter(elevator -> elevator.currentFloor() > waitingFloor)
             .filter(elevator -> elevator.isOnDownPath())
             .collect(Collectors.toList());
     }
