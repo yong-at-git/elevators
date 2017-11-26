@@ -26,7 +26,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Comparator;
-import java.util.PriorityQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 
 /**
  * Created by Yong Huang on 2017-11-20.
@@ -42,11 +42,12 @@ public class ElevatorImpl implements Elevator {
     private EventBus eventBus;
     private ElevatorConfiguration configuration;
 
-    private PriorityQueue<Integer> upwardsTargetFloors = new PriorityQueue<>();
-    private PriorityQueue<Integer> downwardsTargetFloors = new PriorityQueue<>(Comparator.reverseOrder());
+    private PriorityBlockingQueue<Integer> upwardsTargetFloors = new PriorityBlockingQueue<>();
+    private static final int INIT_CAPACITY = 11; // See PriorityBlockingQueue Javadoc
+    private PriorityBlockingQueue<Integer> downwardsTargetFloors = new PriorityBlockingQueue<>(INIT_CAPACITY, Comparator.reverseOrder());
 
     private ElevatorImpl() {
-        // non-arg for Spring
+        // non-arg
     }
 
     public ElevatorImpl(EventBus eventBus, int id, ElevatorConfiguration configuration) {
@@ -54,11 +55,6 @@ public class ElevatorImpl implements Elevator {
         this.id = id;
         this.eventBus = eventBus;
         this.configuration = configuration;
-    }
-
-    public ElevatorImpl(EventBus eventBus, int currentFloor, int id, ElevatorConfiguration configuration) {
-        this(eventBus, id, configuration);
-        this.currentFloor = currentFloor;
     }
 
     @Override public Direction getDirection() {
@@ -243,11 +239,11 @@ public class ElevatorImpl implements Elevator {
         return eventBus;
     }
 
-    public PriorityQueue<Integer> getUpwardsTargetFloors() {
+    public PriorityBlockingQueue<Integer> getUpwardsTargetFloors() {
         return upwardsTargetFloors;
     }
 
-    public PriorityQueue<Integer> getDownwardsTargetFloors() {
+    public PriorityBlockingQueue<Integer> getDownwardsTargetFloors() {
         return downwardsTargetFloors;
     }
 

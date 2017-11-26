@@ -24,11 +24,11 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.stream.Collectors;
 
 /**
@@ -54,8 +54,15 @@ public class ElevatorControllerImpl implements ElevatorController {
     private List<ElevatorImpl> elevators = new ArrayList<>();
     private Queue<ElevatorImpl> freeElevators = new LinkedBlockingDeque<>();
 
-    private PriorityQueue<UserWaiting> upwardsWaitingQueue = new PriorityQueue<>(ComparatorFactory.naturalOrderByFloorNumber());
-    private PriorityQueue<UserWaiting> downwardsWaitingQueue = new PriorityQueue<>(ComparatorFactory.reverseOrderByFloorNumber());
+    private static final int INIT_CAPACITY = 11; // See PriorityBlockingQueue Javadoc
+    private PriorityBlockingQueue<UserWaiting> upwardsWaitingQueue = new PriorityBlockingQueue<>(
+        INIT_CAPACITY,
+        ComparatorFactory.naturalOrderByFloorNumber());
+
+    private PriorityBlockingQueue<UserWaiting> downwardsWaitingQueue = new PriorityBlockingQueue<>(
+        INIT_CAPACITY,
+        ComparatorFactory.reverseOrderByFloorNumber());
+
     private Queue<UserWaiting> timedQueueForAllWaitingRequests = new LinkedBlockingQueue<>();
 
     @PostConstruct
@@ -259,7 +266,10 @@ public class ElevatorControllerImpl implements ElevatorController {
     }
 
     @Scheduled(fixedRateString = "${com.tingco.elevator.controller.waiting.queue.scan.interval.in.ms}")
-    void processWaitingQueue(){
-        LOGGER.info("Scanning queue.");
+    void processWaitingQueue() {
+        if (this.timedQueueForAllWaitingRequests.isEmpty()) {
+            return;
+        }
+
     }
 }
