@@ -1,7 +1,6 @@
 package com.tingco.codechallenge.elevator.resources;
 
 import com.tingco.codechallenge.elevator.api.ElevatorControllerImpl;
-import com.tingco.codechallenge.elevator.api.ElevatorImpl;
 import com.tingco.codechallenge.elevator.api.RideRequest;
 import com.tingco.codechallenge.elevator.api.exceptions.OutOfFloorRangeException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,15 +33,8 @@ public final class ElevatorControllerEndPoints {
 
     @PostMapping(value = "/requests")
     public ResponseEntity<String> createRideRequest(@RequestBody RideRequest rideRequest) {
-        final int toFloor = rideRequest.getToFloor();
-
         try {
-            if (rideRequest.getTowards() != ElevatorImpl.Direction.NONE) {
-                ElevatorImpl.Direction towards = rideRequest.getTowards();
-                this.elevatorControllerImpl.createFloorRequestWithDirectionPreference(toFloor, towards);
-            } else {
-                this.elevatorControllerImpl.createFloorRequestWithNumberPreference(toFloor);
-            }
+            this.elevatorControllerImpl.processRequest(rideRequest);
         } catch (OutOfFloorRangeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
