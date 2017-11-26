@@ -25,6 +25,11 @@ public class ElevatorControllerEndPointsTest {
     @Autowired
     private ElevatorControllerEndPoints endPoints;
 
+    private int waitingFloor;
+    private ElevatorImpl.Direction towards;
+    private Integer elevatorId;
+    private int ridingToFloor;
+
     @Test
     public void ping() {
 
@@ -34,7 +39,10 @@ public class ElevatorControllerEndPointsTest {
 
     @Test
     public void waitingRequest_floorOutOfRange() {
-        UserWaiting userWaiting = new UserWaiting(900, ElevatorImpl.Direction.UP);
+        waitingFloor = 90000;
+        towards = ElevatorImpl.Direction.UP;
+
+        UserWaiting userWaiting = new UserWaiting(waitingFloor, towards);
         org.springframework.http.ResponseEntity<WaitingRequestResponse> rideRequest = endPoints.createWaitingRequest(userWaiting);
 
         Assert.assertEquals(rideRequest.getStatusCode(), HttpStatus.BAD_REQUEST);
@@ -42,15 +50,32 @@ public class ElevatorControllerEndPointsTest {
 
     @Test
     public void waitingRequest_directionMissing() {
-        UserWaiting userWaiting = new UserWaiting(3, null);
+        waitingFloor = 90000;
+        towards = null;
+
+        UserWaiting userWaiting = new UserWaiting(waitingFloor, towards);
         org.springframework.http.ResponseEntity<WaitingRequestResponse> rideRequest = endPoints.createWaitingRequest(userWaiting);
 
         Assert.assertEquals(rideRequest.getStatusCode(), HttpStatus.BAD_REQUEST);
     }
 
     @Test
+    public void waitingRequest_success() {
+        waitingFloor = 4;
+        towards = ElevatorImpl.Direction.DOWN;
+
+        UserWaiting userWaiting = new UserWaiting(waitingFloor, towards);
+        org.springframework.http.ResponseEntity<WaitingRequestResponse> rideRequest = endPoints.createWaitingRequest(userWaiting);
+
+        Assert.assertEquals(rideRequest.getStatusCode(), HttpStatus.OK);
+    }
+
+    @Test
     public void ridingRequest_floorOutOfRange() {
-        UserRiding userRiding = new UserRiding(1, 100000);
+        elevatorId = 1;
+        ridingToFloor = 100000;
+
+        UserRiding userRiding = new UserRiding(elevatorId, ridingToFloor);
         org.springframework.http.ResponseEntity<String> rideRequest = endPoints.createRidingRequest(userRiding);
 
         Assert.assertEquals(rideRequest.getStatusCode(), HttpStatus.BAD_REQUEST);
@@ -58,7 +83,10 @@ public class ElevatorControllerEndPointsTest {
 
     @Test
     public void ridingRequest_ridingElevatorIdMissing() {
-        UserRiding userRiding = new UserRiding(null, 2);
+        elevatorId = null;
+        ridingToFloor = 4;
+
+        UserRiding userRiding = new UserRiding(elevatorId, ridingToFloor);
         org.springframework.http.ResponseEntity<String> rideRequest = endPoints.createRidingRequest(userRiding);
 
         Assert.assertEquals(rideRequest.getStatusCode(), HttpStatus.BAD_REQUEST);
@@ -66,10 +94,24 @@ public class ElevatorControllerEndPointsTest {
 
     @Test
     public void ridingRequest_ridingElevatorIdInvalid() {
-        UserRiding userRiding = new UserRiding(-1, 2);
+        elevatorId = -1;
+        ridingToFloor = 4;
+
+        UserRiding userRiding = new UserRiding(elevatorId, ridingToFloor);
         org.springframework.http.ResponseEntity<String> rideRequest = endPoints.createRidingRequest(userRiding);
 
         Assert.assertEquals(rideRequest.getStatusCode(), HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void ridingRequest_success() {
+        elevatorId = 1;
+        ridingToFloor = 4;
+
+        UserRiding userRiding = new UserRiding(elevatorId, ridingToFloor);
+        org.springframework.http.ResponseEntity<String> rideRequest = endPoints.createRidingRequest(userRiding);
+
+        Assert.assertEquals(rideRequest.getStatusCode(), HttpStatus.OK);
     }
 
 }
