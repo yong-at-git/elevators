@@ -9,7 +9,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -19,7 +19,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Sven Wesley
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = ElevatorApplication.class)
+@SpringBootTest(classes = ElevatorApplication.class)
 public class ElevatorControllerEndPointsTest {
 
     @Autowired
@@ -32,9 +32,7 @@ public class ElevatorControllerEndPointsTest {
 
     @Test
     public void ping() {
-
         Assert.assertEquals("pong", endPoints.ping());
-
     }
 
     @Test
