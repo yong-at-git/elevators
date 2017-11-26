@@ -101,6 +101,15 @@ public class ElevatorControllerImpl implements ElevatorController {
         this.eventBus.post(EventFactory.createUserWaiting(allocated.getId(), userWaiting.getTowards(), waitingFloor));
     }
 
+    /**
+     * Delegates the riding request to currently occupied elevator(identified by the elevator id in the request) if the requested floor is not in the elevator's
+     * request queue;otherwise ignore the request.
+     *
+     * @param userRiding an riding request from inside of an elevator.
+     * @throws OutOfFloorRangeException         if the requested floor is out of the range [bottom, top].
+     * @throws MissingRidingElevatorException   if no riding elevator id is provided.
+     * @throws InvalidRidingElevatorIdException if the riding elevator id is provided but not a valid one.
+     */
     public void createUserRidingRequest(UserRiding userRiding) throws OutOfFloorRangeException, MissingRidingElevatorException,
         InvalidRidingElevatorIdException {
         RidingRequestValidator.validate(userRiding, this.elevatorFloorRange, this.validElevatorIds);
