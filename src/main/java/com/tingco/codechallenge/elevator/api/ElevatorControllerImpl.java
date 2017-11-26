@@ -4,7 +4,6 @@ import com.google.common.collect.Range;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.tingco.codechallenge.elevator.api.events.EventFactory;
-import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithDirectionPreference;
 import com.tingco.codechallenge.elevator.api.events.impl.NewlyFree;
 import com.tingco.codechallenge.elevator.api.exceptions.MissingRidingElevatorException;
 import com.tingco.codechallenge.elevator.api.exceptions.MissingWaitingDirectionException;
@@ -50,9 +49,9 @@ public class ElevatorControllerImpl implements ElevatorController {
     private List<Elevator> elevators = new ArrayList<>();
     private Queue<Elevator> freeElevators = new LinkedBlockingDeque<>();
 
-    private PriorityQueue<FloorRequestedWithDirectionPreference> upwardsWaitingQueue = new PriorityQueue<>(ComparatorFactory.naturalOrderByFloorNumber());
-    private PriorityQueue<FloorRequestedWithDirectionPreference> downwardsWaitingQueue = new PriorityQueue<>(ComparatorFactory.reverseOrderByFloorNumber());
-    private Queue<FloorRequestedWithDirectionPreference> queueForAllWaitingRequests = new LinkedBlockingQueue<>();
+    private PriorityQueue<UserWaiting> upwardsWaitingQueue = new PriorityQueue<>(ComparatorFactory.naturalOrderByFloorNumber());
+    private PriorityQueue<UserWaiting> downwardsWaitingQueue = new PriorityQueue<>(ComparatorFactory.reverseOrderByFloorNumber());
+    private Queue<UserWaiting> timedQueueForAllWaitingRequests = new LinkedBlockingQueue<>();
 
     @PostConstruct
     void init() {
@@ -109,8 +108,42 @@ public class ElevatorControllerImpl implements ElevatorController {
         return this.requestElevator(toFloor).getId();
     }
 
+    private void processWaitingQueue() {
+
+    }
+
     @Subscribe
     void onElevatorNewlyFree(NewlyFree newlyFree) {
-        LOGGER.info("Elevator={} is newly free.", newlyFree.getElevatorId());
+        LOGGER.info("Elevator={} is newly free. Put into free elevators queue.", newlyFree.getElevatorId());
+
+        int freedElevatorId = newlyFree.getElevatorId();
+
+        if (timedQueueForAllWaitingRequests.isEmpty()) {
+            LOGGER.info("No pending request. Enqueue the freed elevator={}.", newlyFree);
+
+            this.elevators
+                .stream()
+                .filter(elevator -> elevator.getId() == freedElevatorId)
+                .anyMatch(newlyFreedElevator -> this.freeElevators.offer(newlyFreedElevator));
+            return;
+        }
+
+        UserWaiting longestWaitingRequest = this.timedQueueForAllWaitingRequests.poll();
+
+        LOGGER.info("Allocating free elevator={} to longest waiting request={}.", freedElevatorId, longestWaitingRequest);
+
+        this.eventBus
+            .post(EventFactory.createUserWaiting(freedElevatorId, longestWaitingRequest.getTowards(), longestWaitingRequest.getWaitingFloor()));
+
+        switch (longestWaitingRequest.getTowards()) {
+            case UP:
+                this.upwardsWaitingQueue.remove(longestWaitingRequest);
+                break;
+            case DOWN:
+                this.downwardsWaitingQueue.remove(longestWaitingRequest);
+                break;
+            default:
+                break;
+        }
     }
 }

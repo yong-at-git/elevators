@@ -1,6 +1,6 @@
 package com.tingco.codechallenge.elevator.api.utils;
 
-import com.tingco.codechallenge.elevator.api.events.impl.FloorRequestedWithDirectionPreference;
+import com.tingco.codechallenge.elevator.api.requests.UserWaiting;
 
 import java.util.Comparator;
 
@@ -12,11 +12,11 @@ public class ComparatorFactory {
         // no-arg for util class
     }
 
-    public static final Comparator<FloorRequestedWithDirectionPreference> naturalOrderByFloorNumber() {
-        return Comparator.comparingInt(FloorRequestedWithDirectionPreference::getToFloor);
+    public static final Comparator<UserWaiting> naturalOrderByFloorNumber() {
+        return Comparator.comparingInt(UserWaiting::getWaitingFloor);
     }
 
-    public static final Comparator<FloorRequestedWithDirectionPreference> reverseOrderByFloorNumber() {
-        return (a, b) -> b.getToFloor() - a.getToFloor();
+    public static final Comparator<UserWaiting> reverseOrderByFloorNumber() {
+        return (a, b) -> b.getWaitingFloor() - a.getWaitingFloor();
     }
 }
