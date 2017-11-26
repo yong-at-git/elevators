@@ -14,6 +14,7 @@ import org.springframework.context.annotation.PropertySources;
 
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Preconfigured Spring Application boot class.
@@ -22,6 +23,7 @@ import com.google.common.eventbus.EventBus;
 @Configuration
 @ComponentScan(basePackages = { "com.tingco.codechallenge.elevator" })
 @EnableAutoConfiguration
+@EnableScheduling
 @PropertySources({ @PropertySource("classpath:application.properties") })
 public class ElevatorApplication {
 
