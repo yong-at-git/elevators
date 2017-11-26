@@ -1,34 +1,40 @@
 package com.tingco.codechallenge.elevator.api;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 /**
  * Created by Yong Huang on 2017-11-25.
  */
+
+@Component
 public class ElevatorConfiguration {
+    @Value("${com.tingco.elevator.floor.bottom}")
     private int bottomFloor;
 
+    @Value("${com.tingco.elevator.floor.top}")
     private int topFloor;
 
+    @Value("${com.tingco.elevator.door.opening.duration.in.ms}")
     private int doorOpeningDurationInMs;
 
+    @Value("${com.tingco.elevator.door.opened.waiting.duration.in.ms}")
     private int doorOpenedWaitingDurationInMs;
 
+    @Value("${com.tingco.elevator.door.closing.duration.in.ms}")
     private int doorClosingDurationInMs;
 
+    @Value("${com.tingco.elevator.door.closed.waiting.duration.in.ms}")
     private int doorClosedWaitingDurationInMs;
 
+    @Value("${com.tingco.elevator.move.duration.between.floors.in.ms}")
     private int movingDurationBetweenFloorsInMs;
 
+    @Value("${com.tingco.elevator.waiting.duration.after.notifying.arriving.in.ms}")
     private int waitingDurationAfterNotifyingArrivingInMs;
 
-    private ElevatorConfiguration(Builder builder) {
-        this.doorOpenedWaitingDurationInMs = builder.doorOpenedWaitingDurationInMs;
-        this.movingDurationBetweenFloorsInMs = builder.movingDurationBetweenFloorsInMs;
-        this.doorOpeningDurationInMs = builder.doorOpeningDurationInMs;
-        this.doorClosedWaitingDurationInMs = builder.doorClosedWaitingDurationInMs;
-        this.waitingDurationAfterNotifyingArrivingInMs = builder.waitingDurationAfterNotifyingArrivingInMs;
-        this.bottomFloor = builder.bottomFloor;
-        this.topFloor = builder.topFloor;
-        this.doorClosingDurationInMs = builder.doorClosingDurationInMs;
+    private ElevatorConfiguration() {
+        // no-arg for Spring
     }
 
     public int getBottomFloor() {
@@ -63,62 +69,4 @@ public class ElevatorConfiguration {
         return waitingDurationAfterNotifyingArrivingInMs;
     }
 
-    public static final class Builder {
-        private int bottomFloor;
-        private int topFloor;
-        private int doorOpeningDurationInMs;
-        private int doorOpenedWaitingDurationInMs;
-        private int doorClosingDurationInMs;
-        private int doorClosedWaitingDurationInMs;
-        private int movingDurationBetweenFloorsInMs;
-        private int waitingDurationAfterNotifyingArrivingInMs;
-
-        public Builder() {
-            // no-arg
-        }
-
-        public Builder withBottomFloor(int bottomFloor) {
-            this.bottomFloor = bottomFloor;
-            return this;
-        }
-
-        public Builder withTopFloor(int topFloor) {
-            this.topFloor = topFloor;
-            return this;
-        }
-
-        public Builder withDoorOpeningDurationInMs(int doorOpeningDurationInMs) {
-            this.doorOpeningDurationInMs = doorOpeningDurationInMs;
-            return this;
-        }
-
-        public Builder withDoorOpenedWaitingDurationInMs(int doorOpenedWaitingDurationInMs) {
-            this.doorOpenedWaitingDurationInMs = doorOpenedWaitingDurationInMs;
-            return this;
-        }
-
-        public Builder withDoorClosingDurationInMs(int doorClosingDurationInMs) {
-            this.doorClosingDurationInMs = doorClosingDurationInMs;
-            return this;
-        }
-
-        public Builder withDoorClosedWaitingDurationInMs(int doorClosedWaitingDurationInMs) {
-            this.doorClosedWaitingDurationInMs = doorClosedWaitingDurationInMs;
-            return this;
-        }
-
-        public Builder withMovingDurationBetweenFloorsInMs(int movingDurationBetweenFloorsInMs) {
-            this.movingDurationBetweenFloorsInMs = movingDurationBetweenFloorsInMs;
-            return this;
-        }
-
-        public Builder withWaitingDurationAfterNotifyingArrivingInMs(int waitingDurationAfterNotifyingArrivingInMs) {
-            this.waitingDurationAfterNotifyingArrivingInMs = waitingDurationAfterNotifyingArrivingInMs;
-            return this;
-        }
-
-        public ElevatorConfiguration build() {
-            return new ElevatorConfiguration(this);
-        }
-    }
 }

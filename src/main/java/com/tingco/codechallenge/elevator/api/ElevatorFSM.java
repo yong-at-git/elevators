@@ -198,10 +198,10 @@ class ElevatorFSM {
         this.elevator.setCurrentState(StateFactory.createDoorClosing());
 
         try {
-            LOGGER.info("Closing door.");
+            LOGGER.info("Elevator={}: Closing door.", this.elevator.getId());
             Thread.sleep(this.elevator.getConfiguration().getDoorClosingDurationInMs());
         } catch (InterruptedException e) {
-            LOGGER.info("Emergency happened.");
+            LOGGER.info("Elevator={}: Emergency happened.", this.elevator.getId());
             elevator.getEventBus().post(EventFactory.createEmergency(this.elevator.getId()));
         }
 
@@ -226,7 +226,7 @@ class ElevatorFSM {
             // move towards preferred direction.
             Elevator.Direction preferredDirection = floorRequestedWithDirectionPreference.getTowards();
             LOGGER.info(
-                "Floor requested at floor {} and with preferred direction: {}",
+                "Elevator={}: Floor requested at floor={} and with preferred direction={}", this.elevator.getId(),
                 floorRequestedWithDirectionPreference.getWaitingFloor(),
                 preferredDirection);
 
@@ -250,12 +250,12 @@ class ElevatorFSM {
                     elevator.getDownwardsTargetFloors().offer(toFloor);
                     towards = Elevator.Direction.DOWN;
                 } else {
-                    LOGGER.info("Currently at the requested floor: " + toFloor);
+                    LOGGER.info("Elevator={}: Currently at the requested floor={} ", this.elevator.getId(), toFloor);
                 }
                 break;
             case MOVING_UP:
                 if (isFloorAlreadyRequested(toFloor)) {
-                    LOGGER.info("Floor {} is already requested.", toFloor);
+                    LOGGER.info("Elevator={}: Floor={} is already requested.", this.elevator.getId(), toFloor);
                 } else {
                     if (toFloor > elevator.currentFloor()) {
                         elevator.getUpwardsTargetFloors().offer(toFloor);
@@ -268,7 +268,7 @@ class ElevatorFSM {
                 break;
             case MOVING_DOWN:
                 if (isFloorAlreadyRequested(toFloor)) {
-                    LOGGER.info("Floor {} is already requested.", toFloor);
+                    LOGGER.info("Elevator={}: Floor={} is already requested.", this.elevator.getId(), toFloor);
                 } else {
                     if (toFloor >= elevator.currentFloor()) {
                         elevator.getUpwardsTargetFloors().offer(toFloor);
@@ -284,7 +284,7 @@ class ElevatorFSM {
             case DOOR_OPENED:
             case DOOR_CLOSING:
                 if (isFloorAlreadyRequested(toFloor)) {
-                    LOGGER.info("Floor {} is already requested.", toFloor);
+                    LOGGER.info("Elevator={}: Floor={} is already requested.", this.elevator.getId(), toFloor);
                 } else {
                     if (toFloor > elevator.currentFloor()) {
                         elevator.getUpwardsTargetFloors().offer(toFloor);
@@ -293,7 +293,7 @@ class ElevatorFSM {
                         elevator.getDownwardsTargetFloors().offer(toFloor);
                         towards = Elevator.Direction.DOWN;
                     } else {
-                        LOGGER.info("Currently at the requested floor: " + toFloor);
+                        LOGGER.info("Elevator={}: Currently at the requested floor={}", this.elevator.getId(), toFloor);
                     }
                 }
                 break;
@@ -320,20 +320,20 @@ class ElevatorFSM {
         switch (requestedDirection) {
             case UP:
                 startMotor();
-                LOGGER.info("Moving up upon requested direction: {}", requestedDirection);
+                LOGGER.info("Elevator={}: Moving up upon requested direction={}", this.elevator.getId(), requestedDirection);
 
                 this.elevator.setCurrentState(StateFactory.createMovingUp());
                 doMovingUp();
                 break;
             case DOWN:
                 startMotor();
-                LOGGER.info("Moving down upon requested direction: {}", requestedDirection);
+                LOGGER.info("Elevator={}: Moving down upon requested direction={}", this.elevator.getId(), requestedDirection);
 
                 this.elevator.setCurrentState(StateFactory.createMovingDown());
                 doMovingDown();
                 break;
             default:
-                LOGGER.info("No movement on direction: {}", requestedDirection);
+                LOGGER.info("Elevator={}: No movement on direction={}", this.elevator.getId(), requestedDirection);
                 break;
         }
     }
@@ -353,7 +353,7 @@ class ElevatorFSM {
             }
         } catch (InterruptedException e) {
             stopMotor();
-            LOGGER.info("Emergency happened.");
+            LOGGER.info("Elevator={}: Emergency happened.", this.elevator.getId());
             elevator.getEventBus().post(EventFactory.createEmergency(this.elevator.getId()));
         }
     }
@@ -374,19 +374,19 @@ class ElevatorFSM {
 
         } catch (InterruptedException e) {
             stopMotor();
-            LOGGER.info("Emergency happened.");
+            LOGGER.info("Elevator={}: Emergency happened.", this.elevator.getId());
             elevator.getEventBus().post(EventFactory.createEmergency(this.elevator.getId()));
         }
     }
 
     private void startMotor() {
         this.isMotorRunning = true;
-        LOGGER.info("Starting motor.");
+        LOGGER.info("Elevator={}: Starting motor.", this.elevator.getId());
     }
 
     private void stopMotor() {
         this.isMotorRunning = false;
-        LOGGER.info("Stopping motor.");
+        LOGGER.info("Elevator={}: Stopping motor.", this.elevator.getId());
     }
 
     private void updateStatusOnMaintain() {
@@ -394,7 +394,7 @@ class ElevatorFSM {
     }
 
     private void updateStatusOnArrive(int arrivedFloor) {
-        LOGGER.info("Arriving floor: {}", arrivedFloor);
+        LOGGER.info("Elevator={}: Arriving floor={}", this.elevator.getId(), arrivedFloor);
         this.elevator.setCurrentFloor(arrivedFloor);
 
         if (!isFloorAlreadyRequested(arrivedFloor)) {
@@ -431,10 +431,10 @@ class ElevatorFSM {
         this.elevator.setCurrentState(StateFactory.createDoorOpening());
 
         try {
-            LOGGER.info("Opening door.");
+            LOGGER.info("Elevator={}: Opening door.", this.elevator.getId());
             Thread.sleep(this.elevator.getConfiguration().getDoorOpeningDurationInMs());
         } catch (InterruptedException e) {
-            LOGGER.info("Emergency happened.");
+            LOGGER.info("Elevator={}: Emergency happened.", this.elevator.getId());
             elevator.getEventBus().post(EventFactory.createEmergency(this.elevator.getId()));
         }
 
@@ -449,10 +449,10 @@ class ElevatorFSM {
         this.elevator.setCurrentState(StateFactory.createDoorOpened());
 
         try {
-            LOGGER.info("Door opened. Waiting for user to get off and on.");
+            LOGGER.info("Elevator={}: Door opened. Waiting for user to get off and on.", this.elevator.getId());
             Thread.sleep(this.elevator.getConfiguration().getDoorOpenedWaitingDurationInMs());
         } catch (InterruptedException e) {
-            LOGGER.info("Emergency happened.");
+            LOGGER.info("Elevator={}: Emergency happened.", this.elevator.getId());
             elevator.getEventBus().post(EventFactory.createEmergency(this.elevator.getId()));
         }
 
@@ -460,25 +460,30 @@ class ElevatorFSM {
     }
 
     private void updateStatusOnDoorClosed() {
+        try {
+            LOGGER.info("Elevator={}: Door closed. Waiting for floor request.", this.elevator.getId());
+            Thread.sleep(this.elevator.getConfiguration().getDoorClosedWaitingDurationInMs());
+        } catch (InterruptedException e) {
+            LOGGER.info("Elevator={}: Emergency happened after door closed.", this.elevator.getId());
+            elevator.getEventBus().post(EventFactory.createEmergency(this.elevator.getId()));
+            return;
+        }
+
         if (this.elevator.getDownwardsTargetFloors().isEmpty() && this.elevator.getUpwardsTargetFloors().isEmpty()) {
-            LOGGER.info("Door Closed. No remaining request. Going idle.");
+            LOGGER.info("Elevator={}: No request. Going idle.", this.elevator.getId());
             this.elevator.getEventBus().post(EventFactory.createIdle(this.elevator.getId()));
         } else if (this.elevator.getDownwardsTargetFloors().isEmpty()) {
-            LOGGER.info("Door Closed. No downwards request left. Going up.");
-            int toFloor = this.elevator.getUpwardsTargetFloors().peek();
+            LOGGER.info("Elevator={}: No downwards request left. Going up.", this.elevator.getId());
             move(Elevator.Direction.UP);
         } else if (this.elevator.getUpwardsTargetFloors().isEmpty()) {
-            LOGGER.info("Door Closed. No upwards request left. Going down.");
-            int toFloor = this.elevator.getDownwardsTargetFloors().peek();
+            LOGGER.info("Elevator={}: No upwards request left. Going down.", this.elevator.getId());
             move(Elevator.Direction.DOWN);
         } else {
             if (this.elevator.isOnUpPath()) {
-                LOGGER.info("Door Closed. Keep moving up.");
-                int toFloor = this.elevator.getUpwardsTargetFloors().peek();
+                LOGGER.info("Elevator={}: Keep moving up.", this.elevator.getId());
                 move(Elevator.Direction.UP);
             } else {
-                LOGGER.info("Door Closed. Keep moving down.");
-                int toFloor = this.elevator.getDownwardsTargetFloors().peek();
+                LOGGER.info("Elevator={}: Keep moving down.", this.elevator.getId());
                 move(Elevator.Direction.DOWN);
             }
         }
@@ -492,7 +497,8 @@ class ElevatorFSM {
     }
 
     private void throwIllegalStateTransitionException(Event event) {
-        String exceptionMessage = "Event: " + event.getToken() + " should not happen under state: " + elevator.getCurrentState().getToken();
+        String exceptionMessage =
+            "Elevator=" + this.elevator.getId() + ": Event= " + event.getToken() + " should not happen under state=" + elevator.getCurrentState().getToken();
         LOGGER.fatal(exceptionMessage);
         updateStatusOnEmergency();
     }

@@ -105,11 +105,11 @@ public class ElevatorImpl implements Elevator {
     }
 
     void setCurrentState(ElevatorState newState) {
-        LOGGER.info("Setting state from: {} to: {}", this.getCurrentState().getToken(), newState.getToken());
+        LOGGER.info("Elevator={}: Setting state from={} to={}", this.getId(), this.getCurrentState().getToken(), newState.getToken());
         this.currentState = newState;
 
         if (ElevatorStateToken.IDLE.equals(newState.getToken())) {
-            LOGGER.info("The recorded events: {}", this.fsm.getEVENT_LOG());
+            LOGGER.info("Elevator={}: The recorded events={}", this.getId(), this.fsm.getEVENT_LOG());
             this.fsm.getEVENT_LOG().clear();
         }
     }
@@ -190,7 +190,7 @@ public class ElevatorImpl implements Elevator {
     @Subscribe
     public void onEmergency(Emergency emergencyEvent) {
         if (emergencyEvent.getElevatorId() == this.getId()) {
-            LOGGER.info("Receiving {} ", emergencyEvent);
+            LOGGER.info("Elevator={}: Receiving={} ", this.getId(), emergencyEvent);
             this.fsm.onEmergency();
         }
     }
@@ -198,7 +198,7 @@ public class ElevatorImpl implements Elevator {
     @Subscribe
     private void onFloorRequested(FloorRequestedWithNumberPreference floorRequestedWithNumberPreference) throws OutOfFloorRangeException {
         if (floorRequestedWithNumberPreference.getElevatorId() == this.getId()) {
-            LOGGER.info("Receiving {} ", floorRequestedWithNumberPreference);
+            LOGGER.info("Elevator={}: Receiving {} ", this.getId(), floorRequestedWithNumberPreference);
 
             int toFloor = floorRequestedWithNumberPreference.getToFloor();
             FloorValidator.validate(toFloor, Range.closed(this.configuration.getBottomFloor(), this.configuration.getTopFloor()));
@@ -210,7 +210,7 @@ public class ElevatorImpl implements Elevator {
     @Subscribe
     private void onMaintain(Maintain maintain) {
         if (maintain.getElevatorId() == this.getId()) {
-            LOGGER.info("Receiving {}", maintain);
+            LOGGER.info("Elevator={}: Receiving={}", this.getId(), maintain);
             this.fsm.onMaintain(maintain);
         }
     }
@@ -218,7 +218,7 @@ public class ElevatorImpl implements Elevator {
     @Subscribe
     public void onPowerOff(PowerOff powerOff) {
         if (powerOff.getElevatorId() == this.getId()) {
-            LOGGER.info("Receiving {} ", powerOff);
+            LOGGER.info("Elevator={}: Receiving={} ", this.getId(), powerOff);
             this.fsm.onPowerOff(powerOff);
         }
     }
@@ -226,7 +226,7 @@ public class ElevatorImpl implements Elevator {
     @Subscribe
     public void onUserWaitingRequest(FloorRequestedWithDirectionPreference floorRequestedWithDirectionPreference) throws OutOfFloorRangeException {
         if (floorRequestedWithDirectionPreference.getElevatorId() == this.getId()) {
-            LOGGER.info("Receiving {} ", floorRequestedWithDirectionPreference);
+            LOGGER.info("Elevator={}: Receiving={} ", this.getId(), floorRequestedWithDirectionPreference);
 
             int toFloor = floorRequestedWithDirectionPreference.getToFloor();
             FloorValidator.validate(toFloor, Range.closed(this.configuration.getBottomFloor(), this.configuration.getTopFloor()));

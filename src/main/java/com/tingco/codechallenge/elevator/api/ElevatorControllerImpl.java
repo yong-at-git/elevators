@@ -30,32 +30,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class ElevatorControllerImpl implements ElevatorController {
     private static final Logger LOGGER = LogManager.getLogger(ElevatorControllerImpl.class);
 
-    @Value("${com.tingco.elevator.floor.bottom}")
-    private int bottomFloor;
-
-    @Value("${com.tingco.elevator.floor.top}")
-    private int topFloor;
-
-    @Value("${com.tingco.elevator.door.opening.duration.in.ms}")
-    private int doorOpeningDurationInMs;
-
-    @Value("${com.tingco.elevator.door.opened.waiting.duration.in.ms}")
-    private int doorOpenedWaitingDurationInMs;
-
-    @Value("${com.tingco.elevator.door.closing.duration.in.ms}")
-    private int doorClosingDurationInMs;
-
-    @Value("${com.tingco.elevator.door.closed.waiting.duration.in.ms}")
-    private int doorClosedWaitingDurationInMs;
-
-    @Value("${com.tingco.elevator.move.duration.between.floors.in.ms}")
-    private int movingDurationBetweenFloorsInMs;
-
-    @Value("${com.tingco.elevator.waiting.duration.after.notifying.arriving.in.ms}")
-    private int waitingDurationAfterNotifyingArrivingInMs;
-
     @Value("${com.tingco.elevator.numberofelevators}")
     private int numberOfElevators;
+
+    @Autowired
+    ElevatorConfiguration elevatorConfiguration;
 
     @Autowired
     EventBus eventBus;
@@ -70,7 +49,7 @@ public class ElevatorControllerImpl implements ElevatorController {
     @PostConstruct
     void init() {
         for (int id = 1; id <= numberOfElevators; id++) {
-            Elevator elevator = new ElevatorImpl(this.eventBus, id, createElevatorConfiguration());
+            Elevator elevator = new ElevatorImpl(this.eventBus, id, this.elevatorConfiguration);
             elevators.add(elevator);
             freeElevators.offer(elevator);
             this.eventBus.register(elevator);
@@ -101,7 +80,7 @@ public class ElevatorControllerImpl implements ElevatorController {
 
     public void processRequest(RideRequest rideRequest) throws OutOfFloorRangeException {
         final int toFloor = rideRequest.getToFloor();
-        FloorValidator.validate(toFloor, Range.closed(bottomFloor, topFloor));
+        FloorValidator.validate(toFloor, Range.closed(this.elevatorConfiguration.getBottomFloor(), this.elevatorConfiguration.getTopFloor()));
 
         if (rideRequest.getTowards() != ElevatorImpl.Direction.NONE) {
             ElevatorImpl.Direction towards = rideRequest.getTowards();
@@ -129,19 +108,6 @@ public class ElevatorControllerImpl implements ElevatorController {
 
     @Subscribe
     void onElevatorNewlyFree(NewlyFree newlyFree) {
-        LOGGER.info("Elevator: {} is newly free.", newlyFree.getElevatorId());
-    }
-
-    private ElevatorConfiguration createElevatorConfiguration() {
-        return new ElevatorConfiguration.Builder()
-            .withBottomFloor(bottomFloor)
-            .withTopFloor(topFloor)
-            .withDoorClosingDurationInMs(doorClosingDurationInMs)
-            .withDoorClosedWaitingDurationInMs(doorClosedWaitingDurationInMs)
-            .withDoorOpeningDurationInMs(doorOpeningDurationInMs)
-            .withDoorOpenedWaitingDurationInMs(doorOpenedWaitingDurationInMs)
-            .withMovingDurationBetweenFloorsInMs(movingDurationBetweenFloorsInMs)
-            .withWaitingDurationAfterNotifyingArrivingInMs(waitingDurationAfterNotifyingArrivingInMs)
-            .build();
+        LOGGER.info("Elevator={} is newly free.", newlyFree.getElevatorId());
     }
 }
