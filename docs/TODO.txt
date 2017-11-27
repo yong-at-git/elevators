@@ -1,3 +1,0 @@
-1. Handle approaching target floor, e.g. reducing speed.
-
-2. Document the APIs with Swagger.
