@@ -4,14 +4,15 @@ Guava EventBus and use Availability for asynchronous integration testing.
 Below is an outline of the solution. Thanks for your time in advance.
 
 # Modelling
-    The elevator is modelled with FSM (finite-state-machine). The elevator controller is modelled with
-    help from its activity diagram. Please refer to the FSM and activity diagrams (PDF in docs folder) for details.
+    1. The elevator is modelled with FSM (finite-state-machine).
+    2. The elevator controller is modelled with help from its activity diagram.
+    Please refer to the FSM and activity diagrams (PDF in docs folder) for details.
 
 # Design
-    The ElevatorControllerEndPoints class is the REST interface of the service.
-    The ElevatorControllerImpl class validates the requests and delegates valid ones to elevators via event bus.
-    The ElevatorImpl class listens to request events via event bus and forwards events to FSM.
-    The ElevatorFSM class acts on events by checking state transition condition(i.e. guard) and performing state changes.
+    1. The `ElevatorControllerEndPoints` class is the REST interface of the service.
+    2. The ElevatorControllerImpl class validates the requests and delegates valid ones to elevators via event bus.
+    3. The ElevatorImpl class listens to request events via event bus and forwards events to FSM.
+    4. The ElevatorFSM class acts on events by checking state transition condition(i.e. guard) and performing state changes.
 
 # Implementation
     1. Rely on event publish-subscribe for request delegation and FSM state transition;
