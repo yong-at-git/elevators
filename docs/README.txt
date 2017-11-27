@@ -44,6 +44,7 @@ Below is an outline of the solution. Thanks for your time in advance.
     Updated Maven dependency of Availability and re-organized the pom file.
     Updated some Spring annotations, e.g. using SpringBootApplication.
     Use log4j2 for logging.
+    It seems initially the InteliJ project file from the zip file sets Java level to 1.3.
 
 # How to verify
     The service logs each event and state transitions. It also keeps a queue of event tokens,
